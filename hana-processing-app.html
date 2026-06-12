@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>加工・在庫管理 | ファンシーフラワー</title>
+<style>
+:root{
+  --green:#1D9E75;--green-light:#E1F5EE;--green-mid:#9FE1CB;--green-dark:#0F6E56;
+  --amber:#BA7517;--amber-light:#FAEEDA;
+  --red:#A32D2D;--red-light:#FCEBEB;
+  --blue:#1a6ea8;--blue-light:#E8F4FD;
+  --purple:#6741d9;--purple-light:#EDE9FE;
+  --gray:#888780;--gray-light:#F1EFE8;--gray-mid:#D3D1C7;
+  --text:#2C2C2A;--text-muted:#5F5E5A;--text-hint:#888780;
+  --bg:#fff;--bg-surface:#F1EFE8;
+  --border:rgba(0,0,0,0.12);--border-mid:rgba(0,0,0,0.22);
+  --radius:12px;--radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Hiragino Kaku Gothic ProN','Hiragino Sans','Noto Sans JP',sans-serif;background:var(--bg-surface);color:var(--text);min-height:100vh;font-size:15px;line-height:1.5;}
+.screen{display:none;height:100dvh;flex-direction:column;overflow:hidden;}
+.screen.active{display:flex;}
+.screen-body{flex:1;overflow-y:auto;padding:16px;padding-bottom:8px;}
+.app-header{background:var(--green-dark);color:#fff;padding:14px 16px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.app-header .title{font-size:16px;font-weight:600;}
+.app-header .subtitle{font-size:12px;opacity:.75;margin-top:1px;}
+.header-left{display:flex;flex-direction:column;}
+.db-dot{width:6px;height:6px;border-radius:50%;background:#9FE1CB;display:inline-block;}
+.db-dot.err{background:#F09595;}
+#screen-login{background:var(--bg);justify-content:center;align-items:center;padding:40px 24px;}
+.login-logo{font-size:48px;margin-bottom:8px;}
+.login-title{font-size:22px;font-weight:700;color:var(--green);margin-bottom:4px;}
+.login-sub{font-size:13px;color:var(--gray);margin-bottom:40px;}
+.login-label{font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:12px;align-self:flex-start;width:100%;max-width:320px;}
+.staff-grid-login{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:320px;}
+.staff-btn-login{background:var(--gray-light);border:1.5px solid var(--gray-mid);border-radius:var(--radius);padding:14px 10px;font-size:14px;font-weight:600;color:var(--text);cursor:pointer;text-align:center;}
+.staff-btn-login:active{background:var(--green-light);border-color:var(--green);color:var(--green);}
+.bottom-nav{background:var(--bg);border-top:1px solid var(--border);display:flex;flex-shrink:0;}
+.nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;padding:9px 2px 13px;cursor:pointer;color:var(--gray);font-size:10px;gap:2px;border:none;background:none;font-family:inherit;}
+.nav-tab .icon{font-size:20px;}
+.nav-tab.active{color:var(--green);}
+.home-body{padding:16px;}
+.date-bar{background:var(--bg);border-radius:var(--radius);border:.5px solid var(--border);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;}
+.date-bar .date-val{font-size:17px;font-weight:600;}
+.change-date-btn{font-size:12px;color:var(--green);background:var(--green-light);border:none;padding:6px 12px;border-radius:20px;cursor:pointer;}
+.section-label{font-size:11px;font-weight:700;color:var(--gray);letter-spacing:.08em;margin-bottom:8px;margin-top:16px;}
+.section-label:first-of-type{margin-top:0;}
+.user-tag{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,.2);border-radius:20px;padding:3px 10px 3px 6px;font-size:12px;font-weight:600;color:#fff;}
+.user-dot{width:8px;height:8px;background:#9FE1CB;border-radius:50%;}
+.action-cards{display:flex;flex-direction:column;gap:10px;}
+.action-card{background:var(--bg);border-radius:var(--radius);border:.5px solid var(--border);padding:18px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;}
+.action-card:active{transform:scale(.98);background:var(--gray-light);}
+.action-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.action-icon.green{background:var(--green-light);}
+.action-icon.amber{background:var(--amber-light);}
+.action-icon.blue{background:var(--blue-light);}
+.card-title{font-size:15px;font-weight:600;margin-bottom:2px;}
+.card-desc{font-size:12px;color:var(--text-muted);}
+.chevron{margin-left:auto;color:var(--gray);font-size:18px;}
+.entry-header{background:var(--bg);border-bottom:.5px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.back-btn{background:var(--gray-light);border:none;border-radius:8px;padding:7px 12px;font-size:13px;color:var(--text-muted);cursor:pointer;font-family:inherit;}
+.entry-title{font-size:15px;font-weight:600;}
+.meta-bar{background:var(--bg);border-radius:var(--radius-sm);border:.5px solid var(--border);padding:9px 14px;margin-bottom:14px;font-size:13px;color:var(--text-muted);display:flex;gap:16px;}
+.meta-bar span{font-weight:600;color:var(--text);}
+.entry-section-label{font-size:11px;font-weight:700;color:var(--gray);letter-spacing:.06em;margin:14px 0 6px;}
+.product-cards{display:flex;flex-direction:column;gap:10px;}
+.product-card{background:var(--bg);border-radius:var(--radius);border:.5px solid var(--border);overflow:hidden;}
+.product-card-header{padding:11px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:.5px solid var(--border);background:var(--gray-light);}
+.product-name{font-size:14px;font-weight:600;}
+.total-badge{background:var(--green);color:#fff;font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;}
+.amount-badge{background:var(--purple-light);color:var(--purple);font-size:11px;font-weight:600;padding:2px 9px;border-radius:20px;}
+.remove-card-btn{background:none;border:none;color:var(--text-hint);font-size:18px;padding:2px 6px;cursor:pointer;line-height:1;}
+.product-card-body{padding:8px 14px;}
+.dest-row{display:flex;align-items:center;padding:7px 0;border-bottom:.5px solid var(--border);}
+.dest-row:last-child{border-bottom:none;}
+.dest-label{flex:1;font-size:13px;}
+.qty-control{display:flex;align-items:center;}
+.qty-btn{width:32px;height:32px;border:.5px solid var(--border-mid);background:var(--bg-surface);font-size:17px;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;line-height:1;}
+.qty-btn.minus{border-radius:8px 0 0 8px;}
+.qty-btn.plus{border-radius:0 8px 8px 0;}
+.qty-btn:active{background:var(--gray-mid);}
+.qty-display{width:42px;height:32px;border-top:.5px solid var(--border-mid);border-bottom:.5px solid var(--border-mid);background:var(--bg);text-align:center;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.single-qty-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 12px;}
+.memo-row{padding:6px 14px 12px;border-top:.5px solid var(--border);}
+.memo-label{font-size:11px;color:var(--text-hint);margin-bottom:4px;}
+.memo-input{width:100%;border:.5px solid var(--border-mid);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;color:var(--text);background:var(--bg);resize:none;}
+.memo-input:focus{outline:none;border-color:var(--green);}
+.badge-season{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;font-weight:600;background:var(--purple-light);color:var(--purple);margin-left:4px;}
+.badge-spot{display:inline-block;font-size:10px;padding:1px 5px;border-radius:4px;font-weight:600;background:var(--amber-light);color:var(--amber);margin-left:4px;}
+.add-item-row{display:flex;gap:8px;align-items:center;margin-top:8px;}
+.add-item-select{flex:1;border:1.5px solid var(--border-mid);border-radius:var(--radius-sm);padding:9px 10px;font-size:13px;color:var(--text);background:var(--bg);outline:none;font-family:inherit;}
+.add-item-select:focus{border-color:var(--green);}
+.add-item-btn{background:var(--green-light);border:1.5px solid var(--green-mid);border-radius:var(--radius-sm);padding:9px 14px;font-size:13px;font-weight:600;color:var(--green);cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit;}
+.spot-add-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;}
+.spot-name-input{flex:1;min-width:100px;border:1.5px solid var(--border-mid);border-radius:var(--radius-sm);padding:9px 10px;font-size:13px;color:var(--text);background:var(--bg);outline:none;font-family:inherit;}
+.spot-price-input{width:80px;border:1.5px solid var(--border-mid);border-radius:var(--radius-sm);padding:9px 8px;font-size:13px;color:var(--text);background:var(--bg);outline:none;flex-shrink:0;font-family:inherit;}
+.spot-name-input:focus,.spot-price-input:focus{border-color:var(--green);}
+.spot-btn{background:var(--amber-light);border:1.5px solid #f4b5a0;border-radius:var(--radius-sm);padding:9px 14px;font-size:13px;font-weight:600;color:var(--amber);cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit;}
+.remove-extra-btn{background:none;border:none;color:var(--text-hint);font-size:16px;cursor:pointer;padding:2px 4px;line-height:1;}
+.std-product-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;}
+.std-product-btn{background:var(--bg);border:1.5px solid var(--border-mid);border-radius:var(--radius-sm);padding:12px 8px;font-size:13px;font-weight:600;color:var(--text);cursor:pointer;text-align:center;font-family:inherit;line-height:1.3;}
+.std-product-btn:active{background:var(--green-light);border-color:var(--green);color:var(--green);}
+.std-product-btn.added{background:var(--green-light);border-color:var(--green-mid);color:var(--green-dark);opacity:.6;}
+.save-area{padding:12px 16px 16px;background:var(--bg-surface);border-top:.5px solid var(--border);flex-shrink:0;}
+.save-btn{width:100%;background:var(--green);color:#fff;border:none;border-radius:var(--radius);padding:15px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+.save-btn:active{background:var(--green-dark);}
+.hist-tabs{background:var(--bg);border-bottom:1px solid var(--border);display:flex;padding:0 12px;gap:4px;flex-shrink:0;}
+.hist-tab{flex:1;padding:10px 4px;border:none;background:none;font-size:12px;font-weight:600;color:var(--gray);border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;}
+.hist-tab.active{color:var(--green);border-bottom:2px solid var(--green);}
+.today-amount-bar{background:var(--purple-light);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;}
+.today-amount-bar .lbl{font-size:12px;color:var(--purple);font-weight:600;}
+.today-amount-bar .val{font-size:16px;font-weight:700;color:var(--purple);}
+.record-card{background:var(--bg);border-radius:var(--radius);border:.5px solid var(--border);padding:12px 14px;margin-bottom:8px;}
+.record-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.type-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;}
+.badge-process{background:var(--green-light);color:var(--green-dark);}
+.badge-waste{background:var(--amber-light);color:var(--amber);}
+.badge-inventory{background:var(--blue-light);color:var(--blue);}
+.record-product{font-size:14px;font-weight:600;margin-bottom:4px;}
+.record-detail{font-size:12px;color:var(--text-muted);line-height:1.8;}
+.record-total{font-size:12px;font-weight:600;color:var(--green);margin-top:3px;}
+.record-amount{font-size:12px;font-weight:600;color:var(--purple);margin-top:2px;}
+.cross-table-wrap{overflow-x:auto;margin-bottom:12px;}
+.cross-table{border-collapse:collapse;font-size:12px;min-width:100%;}
+.cross-table th{background:var(--gray-light);padding:7px 10px;text-align:center;font-weight:600;border:.5px solid var(--border-mid);white-space:nowrap;}
+.cross-table td{padding:7px 10px;text-align:center;border:.5px solid var(--border);background:var(--bg);}
+.cross-table td:first-child{text-align:left;font-weight:600;background:var(--gray-light);}
+.cross-table .nonzero{color:var(--green);font-weight:700;}
+.sum-tabs{background:var(--bg);border-bottom:1px solid var(--border);display:flex;padding:0 8px;flex-shrink:0;}
+.sum-tab{flex:1;padding:10px 2px;border:none;background:none;font-size:11px;font-weight:600;color:var(--gray);border-bottom:2px solid transparent;cursor:pointer;font-family:inherit;}
+.sum-tab.active{color:var(--green);border-bottom:2px solid var(--green);}
+.sum-date-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.sum-date-input{border:.5px solid var(--border-mid);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;color:var(--text);}
+.sum-date-input:focus{outline:none;border-color:var(--green);}
+.sum-amount-card{background:var(--purple-light);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px;}
+.sum-amount-card .title{font-size:12px;color:var(--purple);font-weight:600;margin-bottom:4px;}
+.sum-amount-card .amount{font-size:22px;font-weight:700;color:var(--purple);}
+.sum-amount-card .sub{font-size:12px;color:var(--purple);opacity:.7;margin-top:2px;}
+.sum-section{background:var(--bg);border-radius:var(--radius);border:.5px solid var(--border);margin-bottom:10px;overflow:hidden;}
+.sum-section-header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-weight:600;font-size:14px;}
+.acc-icon{font-size:12px;color:var(--gray);transition:transform .2s;}
+.acc-open .acc-icon{transform:rotate(180deg);}
+.sum-section-body{padding:0 14px 12px;display:none;}
+.sum-section-body.open{display:block;}
+.sum-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:.5px solid var(--border);font-size:13px;}
+.sum-row:last-child{border-bottom:none;}
+.sum-row .lbl{color:var(--text-muted);}
+.sum-row .val{font-weight:700;color:var(--green);}
+.sum-row .val.purple{color:var(--purple);}
+.cal-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--bg);border-bottom:.5px solid var(--border);flex-shrink:0;}
+.cal-nav-btn{border:none;background:none;font-size:22px;cursor:pointer;color:var(--green);padding:4px 8px;}
+.cal-month-label{font-size:15px;font-weight:700;}
+.cal-grid-wrap{flex:1;overflow-y:auto;}
+.cal-dow-row{display:grid;grid-template-columns:repeat(7,1fr);background:var(--bg);border-bottom:.5px solid var(--border);position:sticky;top:0;z-index:2;}
+.cal-dow{text-align:center;font-size:11px;font-weight:700;color:var(--gray);padding:6px 0;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);}
+.cal-day{background:var(--bg);min-height:72px;padding:4px;cursor:pointer;}
+.cal-day:active{background:var(--green-light);}
+.cal-day.other-month{background:var(--gray-light);}
+.cal-day.today-cell{background:#fffde7;}
+.cal-day-num{font-size:12px;font-weight:600;color:var(--text-muted);margin-bottom:2px;}
+.cal-day.today-cell .cal-day-num{color:var(--green);font-weight:800;}
+.cal-day.sun .cal-day-num{color:#c0392b;}
+.cal-day.sat .cal-day-num{color:#1a6ea8;}
+.cal-chip{font-size:9px;border-radius:3px;padding:1px 4px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:1px;}
+.chip-process{background:var(--green-light);color:var(--green-dark);}
+.chip-waste{background:var(--amber-light);color:var(--amber);}
+.chip-inventory{background:var(--blue-light);color:var(--blue);}
+.day-detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;}
+.day-detail-overlay.open{display:flex;}
+.day-detail-sheet{background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-height:80vh;overflow-y:auto;padding:20px 16px;animation:slideUp .2s ease;position:relative;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.day-detail-title{font-size:16px;font-weight:700;margin-bottom:14px;text-align:center;}
+.day-detail-close{position:absolute;right:16px;top:20px;background:var(--gray-light);border:none;border-radius:8px;padding:6px 12px;font-size:13px;color:var(--text-muted);cursor:pointer;font-family:inherit;}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;}
+.modal-overlay.open{display:flex;}
+.modal-sheet{background:var(--bg);border-radius:20px 20px 0 0;width:100%;max-height:80vh;overflow-y:auto;padding:20px 16px;animation:slideUp .2s ease;}
+.product-list-item{padding:13px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:14px;margin-bottom:3px;}
+.product-list-item:active{background:var(--green-light);}
+.product-list-item.season{color:var(--purple);background:var(--purple-light);}
+.modal-close-btn{width:100%;background:var(--gray-light);color:var(--text-muted);border:none;border-radius:8px;padding:11px;font-size:13px;cursor:pointer;margin-top:6px;font-family:inherit;}
+.qty-dialog{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center;padding:20px;}
+.qty-dialog.open{display:flex;}
+.qty-dialog-box{background:var(--bg);border-radius:var(--radius);padding:22px 20px;width:100%;max-width:260px;text-align:center;animation:fadeScale .15s ease;}
+@keyframes fadeScale{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.qty-dialog-label{font-size:13px;color:var(--text-muted);margin-bottom:10px;}
+.qty-dialog-input{width:100%;border:1.5px solid var(--border-mid);border-radius:8px;padding:10px;font-size:22px;font-weight:700;text-align:center;font-family:inherit;color:var(--text);margin-bottom:14px;}
+.qty-dialog-input:focus{outline:none;border-color:var(--green);}
+.qty-dialog-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.qty-dialog-cancel{background:var(--gray-light);border:none;border-radius:8px;padding:11px;font-size:14px;cursor:pointer;font-family:inherit;}
+.qty-dialog-ok{background:var(--green);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
+.date-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.date-overlay.open{display:flex;}
+.date-box{background:var(--bg);border-radius:var(--radius);padding:22px 20px;width:100%;max-width:280px;animation:fadeScale .15s ease;}
+.date-box h3{font-size:15px;font-weight:600;margin-bottom:14px;text-align:center;}
+.date-input{width:100%;border:.5px solid var(--border-mid);border-radius:8px;padding:9px 12px;font-size:15px;font-family:inherit;color:var(--text);margin-bottom:14px;}
+.date-input:focus{outline:none;border-color:var(--green);}
+.date-ok-btn{width:100%;background:var(--green);color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
+.empty-state{text-align:center;padding:48px 16px;color:var(--gray);}
+.empty-state .emoji{font-size:36px;margin-bottom:10px;}
+.toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--text);color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;transition:all .25s;z-index:400;white-space:nowrap;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.loading-overlay{position:fixed;inset:0;background:rgba(255,255,255,.85);z-index:350;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+.loading-overlay.show{display:flex;}
+.spinner{width:34px;height:34px;border:3px solid var(--gray-mid);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;color:var(--text-muted);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login" class="screen active">
+  <div class="login-logo">&#127807;</div>
+  <div class="login-title">加工・在庫管理</div>
+  <div class="login-sub">名前を選んでください</div>
+  <div class="login-label">担当者</div>
+  <div class="staff-grid-login" id="staff-grid-login"></div>
+</div>
+
+<!-- HOME -->
+<div id="screen-home" class="screen">
+  <div class="app-header">
+    <div class="header-left"><div class="title">加工・在庫管理</div><div class="subtitle">ファンシーフラワー</div></div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div id="header-user"></div>
+      <div style="display:flex;align-items:center;gap:4px;"><div class="db-dot" id="dbDot"></div><span id="dbStatusText" style="opacity:.75;font-size:11px;color:#fff;"></span></div>
+    </div>
+  </div>
+  <div class="screen-body home-body">
+    <div class="date-bar">
+      <div><div style="font-size:11px;color:var(--text-muted);">作業日</div><div class="date-val" id="homeDateDisplay">&#8212;</div></div>
+      <button class="change-date-btn" onclick="openDatePicker()">変更</button>
+    </div>
+    <div class="section-label">記録する</div>
+    <div class="action-cards">
+      <div class="action-card" onclick="goToEntry('process')">
+        <div class="action-icon green">&#127800;</div>
+        <div><div class="card-title">加工記録</div><div class="card-desc">商品ごとに納品先別の作成数を記録</div></div>
+        <div class="chevron">&#8250;</div>
+      </div>
+      <div class="action-card" onclick="goToEntry('waste')">
+        <div class="action-icon amber">&#128465;</div>
+        <div><div class="card-title">廃棄記録</div><div class="card-desc">廃棄した商品と数量を記録</div></div>
+        <div class="chevron">&#8250;</div>
+      </div>
+      <div class="action-card" onclick="goToEntry('inventory')">
+        <div class="action-icon blue">&#128230;</div>
+        <div><div class="card-title">棚卸記録</div><div class="card-desc">実在庫数を記録</div></div>
+        <div class="chevron">&#8250;</div>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-tab active" onclick="switchNav('home')"><span class="icon">&#127968;</span>ホーム</button>
+    <button class="nav-tab" onclick="switchNav('records')"><span class="icon">&#128203;</span>本日の記録</button>
+    <button class="nav-tab" onclick="switchNav('summary')"><span class="icon">&#128202;</span>集計</button>
+    <button class="nav-tab" onclick="switchNav('calendar')"><span class="icon">&#128197;</span>カレンダー</button>
+    <button class="nav-tab" onclick="doLogout()"><span class="icon">&#128100;</span>変更</button>
+  </div>
+</div>
+
+<!-- PROCESS ENTRY -->
+<div id="screen-process" class="screen">
+  <div class="entry-header">
+    <button class="back-btn" onclick="goBackToHome()">&#8249; 戻る</button>
+    <div class="entry-title">&#127800; 加工記録</div>
+  </div>
+  <div class="screen-body">
+    <div class="meta-bar">日付：<span id="processMeta_date">&#8212;</span>　担当：<span id="processMeta_staff">&#8212;</span></div>
+    <div class="entry-section-label">定番商品</div>
+    <div class="std-product-grid" id="processStdGrid"></div>
+    <div class="product-cards" id="processCards" style="margin-top:10px;"></div>
+    <div class="entry-section-label">追加商品 <span style="font-size:10px;font-weight:400;color:var(--gray);">繁忙期</span></div>
+    <div style="background:var(--bg);border-radius:var(--radius);border:.5px solid var(--border);padding:10px 14px;">
+      <div id="processExtraList"></div>
+      <div class="add-item-row">
+        <select class="add-item-select" id="processExtraSelect">
+          <option value="">-- 商品を選ぶ --</option>
+        </select>
+        <button class="add-item-btn" onclick="addExtraCard('process')">追加</button>
+      </div>
+    </div>
+    <div class="entry-section-label">スポット商品 <span style="font-size:10px;font-weight:400;color:var(--gray);">自由入力</span></div>
+    <div style="background:var(--bg);border-radius:var(--radius);border:.5px solid var(--border);padding:10px 14px;">
+      <div id="processSpotList"></div>
+      <div class="spot-add-row">
+        <input class="spot-name-input" id="processSpotName" placeholder="商品名">
+        <input class="spot-price-input" id="processSpotPrice" placeholder="円" type="number" inputmode="numeric">
+        <button class="spot-btn" onclick="addSpotCard('process')">追加</button>
+      </div>
+    </div>
+    <div style="height:8px;"></div>
+  </div>
+  <div class="save-area">
+    <button class="save-btn" onclick="saveRecords('process')">まとめて保存</button>
+    <div style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:6px;" id="processSaveSummary"></div>
+  </div>
+</div>
+
+<!-- WASTE ENTRY -->
+<div id="screen-waste" class="screen">
+  <div class="entry-header">
+    <button class="back-btn" onclick="goBackToHome()">&#8249; 戻る</button>
+    <div class="entry-title">&#128465; 廃棄記録</div>
+  </div>
+  <div class="screen-body">
+    <div class="meta-bar">日付：<span id="wasteMeta_date">&#8212;</span>　担当：<span id="wasteMeta_staff">&#8212;</span></div>
+    <div class="entry-section-label">定番商品</div>
+    <div class="std-product-grid" id="wasteStdGrid"></div>
+    <div class="product-cards" id="wasteCards" style="margin-top:10px;"></div>
+    <div class="entry-section-label">追加商品 <span style="font-size:10px;font-weight:400;color:var(--gray);">繁忙期</span></div>
+    <div style="background:var(--bg);border-radius:var(--radius);border:.5px solid var(--border);padding:10px 14px;">
+      <div id="wasteExtraList"></div>
+      <div class="add-item-row">
+        <select class="add-item-select" id="wasteExtraSelect">
+          <option value="">-- 商品を選ぶ --</option>
+        </select>
+        <button class="add-item-btn" onclick="addExtraCard('waste')">追加</button>
+      </div>
+    </div>
+    <div class="entry-section-label">スポット商品 <span style="font-size:10px;font-weight:400;color:var(--gray);">自由入力</span></div>
+    <div style="background:var(--bg);border-radius:var(--radius);border:.5px solid var(--border);padding:10px 14px;">
+      <div id="wasteSpotList"></div>
+      <div class="spot-add-row">
+        <input class="spot-name-input" id="wasteSpotName" placeholder="商品名">
+        <input class="spot-price-input" id="wasteSpotPrice" placeholder="円" type="number" inputmode="numeric">
+        <button class="spot-btn" onclick="addSpotCard('waste')">追加</button>
+      </div>
+    </div>
+    <div style="height:8px;"></div>
+  </div>
+  <div class="save-area">
+    <button class="save-btn" onclick="saveRecords('waste')">まとめて保存</button>
+    <div style="font-size:12px;color:var(--text-muted);text-align:center;margin-top:6px;" id="wasteSaveSummary"></div>
+  </div>
+</div>
+
+<!-- INVENTORY ENTRY -->
+<div id="screen-inventory" class="screen">
+  <div class="entry-header">
+    <button class="back-btn" onclick="goBackToHome()">&#8249; 戻る</button>
+    <div class="entry-title">&#128230; 棚卸記録</div>
+  </div>
+  <div class="screen-body">
+    <div class="meta-bar">日付：<span id="inventoryMeta_date">&#8212;</span>　担当：<span id="inventoryMeta_staff">&#8212;</span></div>
+    <div class="product-cards" id="inventoryCards"><div class="empty-state"><div class="emoji">&#128230;</div><p style="font-size:13px;">「商品を追加」から始めてください</p></div></div>
+    <div style="margin-top:10px;"><button class="save-btn" style="background:var(--bg);color:var(--green);border:1.5px dashed var(--border-mid);" onclick="openInventoryPicker()">＋ 商品を追加</button></div>
+    <div style="height:8px;"></div>
+  </div>
+  <div class="save-area"><button class="save-btn" onclick="saveRecords('inventory')">まとめて保存</button></div>
+</div>
+
+<!-- RECORDS -->
+<div id="screen-records" class="screen">
+  <div class="app-header"><div class="header-left"><div class="title">本日の記録</div><div class="subtitle" id="recordsDateLabel">&#8212;</div></div></div>
+  <div class="hist-tabs">
+    <button class="hist-tab active" id="rtab-card" onclick="switchRecordTab('card')">&#128449; カード</button>
+    <button class="hist-tab" id="rtab-table" onclick="switchRecordTab('table')">&#128203; 表</button>
+  </div>
+  <div class="screen-body" id="recordsBody"></div>
+  <div class="bottom-nav">
+    <button class="nav-tab" onclick="switchNav('home')"><span class="icon">&#127968;</span>ホーム</button>
+    <button class="nav-tab active" onclick="switchNav('records')"><span class="icon">&#128203;</span>本日の記録</button>
+    <button class="nav-tab" onclick="switchNav('summary')"><span class="icon">&#128202;</span>集計</button>
+    <button class="nav-tab" onclick="switchNav('calendar')"><span class="icon">&#128197;</span>カレンダー</button>
+    <button class="nav-tab" onclick="doLogout()"><span class="icon">&#128100;</span>変更</button>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div id="screen-summary" class="screen">
+  <div class="app-header"><div class="header-left"><div class="title">集計</div></div></div>
+  <div class="sum-tabs">
+    <button class="sum-tab active" id="stab-today" onclick="switchSumTab('today')">当日</button>
+    <button class="sum-tab" id="stab-week" onclick="switchSumTab('week')">今週</button>
+    <button class="sum-tab" id="stab-month" onclick="switchSumTab('month')">今月</button>
+    <button class="sum-tab" id="stab-custom" onclick="switchSumTab('custom')">任意期間</button>
+  </div>
+  <div class="screen-body" id="summaryBody"></div>
+  <div class="bottom-nav">
+    <button class="nav-tab" onclick="switchNav('home')"><span class="icon">&#127968;</span>ホーム</button>
+    <button class="nav-tab" onclick="switchNav('records')"><span class="icon">&#128203;</span>本日の記録</button>
+    <button class="nav-tab active" onclick="switchNav('summary')"><span class="icon">&#128202;</span>集計</button>
+    <button class="nav-tab" onclick="switchNav('calendar')"><span class="icon">&#128197;</span>カレンダー</button>
+    <button class="nav-tab" onclick="doLogout()"><span class="icon">&#128100;</span>変更</button>
+  </div>
+</div>
+
+<!-- CALENDAR -->
+<div id="screen-calendar" class="screen">
+  <div class="app-header"><div class="header-left"><div class="title">カレンダー</div></div></div>
+  <div class="cal-header">
+    <button class="cal-nav-btn" onclick="changeCalMonth(-1)">&#8249;</button>
+    <div class="cal-month-label" id="calMonthLabel">&#8212;</div>
+    <button class="cal-nav-btn" onclick="changeCalMonth(1)">&#8250;</button>
+  </div>
+  <div class="cal-grid-wrap">
+    <div class="cal-dow-row" id="calDowRow"></div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div style="height:8px;"></div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-tab" onclick="switchNav('home')"><span class="icon">&#127968;</span>ホーム</button>
+    <button class="nav-tab" onclick="switchNav('records')"><span class="icon">&#128203;</span>本日の記録</button>
+    <button class="nav-tab" onclick="switchNav('summary')"><span class="icon">&#128202;</span>集計</button>
+    <button class="nav-tab active" onclick="switchNav('calendar')"><span class="icon">&#128197;</span>カレンダー</button>
+    <button class="nav-tab" onclick="doLogout()"><span class="icon">&#128100;</span>変更</button>
+  </div>
+</div>
+
+<!-- INVENTORY PICKER MODAL -->
+<div class="modal-overlay" id="inventoryPickerOverlay" onclick="closeInventoryPicker(event)">
+  <div class="modal-sheet">
+    <div style="font-size:15px;font-weight:600;margin-bottom:14px;text-align:center;">棚卸する商品を選択</div>
+    <div id="inventoryPickerList"></div>
+    <button class="modal-close-btn" onclick="closeInventoryPicker(null)">キャンセル</button>
+  </div>
+</div>
+
+<!-- QTY DIALOG -->
+<div class="qty-dialog" id="qtyDialog">
+  <div class="qty-dialog-box">
+    <div class="qty-dialog-label" id="qtyDialogLabel">数量を入力</div>
+    <input class="qty-dialog-input" type="number" id="qtyDialogInput" min="0" inputmode="numeric" pattern="[0-9]*">
+    <div class="qty-dialog-btns">
+      <button class="qty-dialog-cancel" onclick="closeQtyDialog(false)">キャンセル</button>
+      <button class="qty-dialog-ok" onclick="closeQtyDialog(true)">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- DATE PICKER -->
+<div class="date-overlay" id="dateOverlay">
+  <div class="date-box">
+    <h3>作業日を変更</h3>
+    <input class="date-input" type="date" id="datePickerInput">
+    <button class="date-ok-btn" onclick="confirmDate()">確定</button>
+  </div>
+</div>
+
+<!-- DAY DETAIL -->
+<div class="day-detail-overlay" id="dayDetailOverlay" onclick="closeDayDetail(event)">
+  <div class="day-detail-sheet">
+    <button class="day-detail-close" onclick="closeDayDetail(null)">閉じる</button>
+    <div class="day-detail-title" id="dayDetailTitle">&#8212;</div>
+    <div id="dayDetailBody"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div><div class="loading-text" id="loadingText">保存中...</div></div>
+
+<script>
+const SUPABASE_URL='https://vvyzwwoduaqqamjvoqrp.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2eXp3d29kdWFxcWFtanZvcXJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4MTk1MzMsImV4cCI6MjA5NTM5NTUzM30.aKE-ZUjXJ0j3iBMQP1GLpfwwzPWGJFglhJa0vB52Q-U';
+
+// ===== 統合商品マスタ =====
+const MASTER_PRODUCTS=[
+  {id:'butsu450',  name:'仏束花 450円',              price:450,  use_process:true,  use_waste:true,  use_inventory:true,  use_delivery:true,  season:false},
+  {id:'butsu600',  name:'仏束花 600円',              price:600,  use_process:true,  use_waste:true,  use_inventory:true,  use_delivery:true,  season:false},
+  {id:'butsu1000', name:'仏束花 1,000円',            price:1000, use_process:true,  use_waste:true,  use_inventory:true,  use_delivery:true,  season:false},
+  {id:'wrap1000',  name:'ラップダルマ用束花 1,000円', price:1000, use_process:true,  use_waste:true,  use_inventory:true,  use_delivery:false, season:false},
+  {id:'keep120',   name:'キープフラワー 小袋',        price:120,  use_process:false, use_waste:false, use_inventory:true,  use_delivery:true,  season:false},
+  {id:'keep495',   name:'キープフラワー 200ml',       price:495,  use_process:false, use_waste:false, use_inventory:true,  use_delivery:true,  season:false},
+  {id:'butsu1500', name:'仏束花 1,500円',            price:1500, use_process:true,  use_waste:true,  use_inventory:true,  use_delivery:true,  season:true},
+  {id:'butsu2000', name:'仏束花 2,000円',            price:2000, use_process:true,  use_waste:true,  use_inventory:true,  use_delivery:true,  season:true},
+  {id:'butsu3000', name:'仏束花 3,000円',            price:3000, use_process:true,  use_waste:true,  use_inventory:true,  use_delivery:true,  season:true},
+];
+// 各画面用フィルタ済みリスト
+const PRODUCTS_STANDARD=MASTER_PRODUCTS.filter(p=>p.use_process&&!p.season);
+const PRODUCTS_SEASON_LIST=MASTER_PRODUCTS.filter(p=>p.season);
+const PRODUCTS_SEASON=Object.fromEntries(MASTER_PRODUCTS.filter(p=>p.season).map(p=>[p.id,{name:p.name,price:p.price}]));
+const ALL_PRODUCTS=MASTER_PRODUCTS.filter(p=>p.use_inventory);
+const DESTINATIONS=[
+  {id:'montour',   label:'もんとあーる'},
+  {id:'shufu',     label:'主婦の店'},
+  {id:'aoki',      label:'アオキ'},
+  {id:'barcode_none',label:'バーコードなし'},
+  {id:'nakauroshi',label:'仲卸用'},
+];
+
+let STAFF_LIST=[];
+let currentStaff='',currentDate=todayISO(),currentMode='';
+let cards={process:[],waste:[],inventory:[]};
+let extras={process:[],waste:[]};
+let qtyCallback=null,longPressTimer=null,longPressInterval=null;
+let calYear=new Date().getFullYear(),calMonth=new Date().getMonth(),calData={};
+let currentRecordTab='card',currentSumTab='today',recordsData=[];
+
+function todayISO(){const d=new Date();d.setTime(d.getTime()+9*60*60*1000);return d.toISOString().slice(0,10);}
+function formatDate(iso){if(!iso)return '—';const[y,m,d]=iso.split('-');const dw=['日','月','火','水','木','金','土'];return y+'年'+parseInt(m)+'月'+parseInt(d)+'日（'+dw[new Date(+y,+m-1,+d).getDay()]+'）';}
+function weekStart(iso){const d=new Date(iso);d.setDate(d.getDate()-d.getDay());return d.toISOString().slice(0,10);}
+function weekEnd(iso){const d=new Date(iso);d.setDate(d.getDate()+(6-d.getDay()));return d.toISOString().slice(0,10);}
+function monthStart(iso){return iso.slice(0,7)+'-01';}
+function monthEnd(iso){const[y,m]=iso.split('-');return new Date(+y,+m,0).toISOString().slice(0,10);}
+function genId(){return 'local_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);}
+function fmtYen(n){return n.toLocaleString()+'円';}
+function showToast(msg,dur=2200){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+function showLoading(m='保存中...'){document.getElementById('loadingText').textContent=m;document.getElementById('loadingOverlay').classList.add('show');}
+function hideLoading(){document.getElementById('loadingOverlay').classList.remove('show');}
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+async function sbFetch(path,opts={}){
+  const res=await fetch(SUPABASE_URL+path,{...opts,headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})}});
+  if(!res.ok){const e=await res.text();throw new Error(e);}
+  const txt=await res.text();return txt?JSON.parse(txt):[];
+}
+
+async function loadStaffList(){
+  const g=document.getElementById('staff-grid-login');
+  g.innerHTML='<div style="grid-column:1/-1;text-align:center;font-size:13px;color:var(--gray);padding:16px;">読み込み中...</div>';
+  const fallback=['酒井','愛実','瀬尾','御橋','薫','半田','池田','俊','その他'];
+  try{
+    const res=await fetch(SUPABASE_URL+'/rest/v1/staff?use_processing=eq.true&is_active=eq.true&order=sort_order.asc&select=display_name',
+      {headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+    STAFF_LIST=res.ok?(await res.json()).map(s=>s.display_name):fallback;
+    if(!STAFF_LIST.length)STAFF_LIST=fallback;
+  }catch(e){STAFF_LIST=fallback;}
+  g.innerHTML='';
+  STAFF_LIST.forEach(n=>{
+    const b=document.createElement('button');b.className='staff-btn-login';b.textContent=n;
+    b.onclick=()=>{currentStaff=n;enterHome();};g.appendChild(b);
+  });
+}
+function enterHome(){
+  document.getElementById('header-user').innerHTML='<div class="user-tag"><div class="user-dot"></div>'+currentStaff+'</div>';
+  document.getElementById('homeDateDisplay').textContent=formatDate(currentDate);
+  showScreen('screen-home');checkSupabase();
+}
+function doLogout(){currentStaff='';showScreen('screen-login');}
+
+function switchNav(tab){
+  if(tab==='home')showScreen('screen-home');
+  else if(tab==='records'){showScreen('screen-records');loadRecords();}
+  else if(tab==='summary'){showScreen('screen-summary');loadSummary();}
+  else if(tab==='calendar'){showScreen('screen-calendar');renderCalendar();}
+}
+function openDatePicker(){document.getElementById('datePickerInput').value=currentDate;document.getElementById('dateOverlay').classList.add('open');}
+function confirmDate(){const v=document.getElementById('datePickerInput').value;if(v){currentDate=v;document.getElementById('homeDateDisplay').textContent=formatDate(currentDate);}document.getElementById('dateOverlay').classList.remove('open');}
+
+function goToEntry(mode){
+  if(!currentStaff){showToast('担当者を選択してください');return;}
+  currentMode=mode;
+  cards[mode]=[];
+  if(mode!=='inventory')extras[mode]=[];
+  document.getElementById(mode+'Meta_date').textContent=formatDate(currentDate);
+  document.getElementById(mode+'Meta_staff').textContent=currentStaff;
+  renderCards(mode);
+  if(mode!=='inventory'){
+    renderStdGrid(mode);
+    // 繁忙期セレクトをマスタから動的生成
+    var selId=mode+'ExtraSelect';
+    var sel=document.getElementById(selId);
+    if(sel){
+      sel.innerHTML='<option value="">-- 商品を選ぶ --</option>';
+      PRODUCTS_SEASON_LIST.forEach(function(p){
+        var opt=document.createElement('option');
+        opt.value=p.id;opt.textContent=p.name+'（繁忙期）';
+        sel.appendChild(opt);
+      });
+    }
+    renderExtras(mode);renderSpots(mode);
+  }
+  updateSaveSummary(mode);
+  showScreen('screen-'+mode);
+}
+function goBackToHome(){showScreen('screen-home');}
+
+// 定番カード追加
+function renderStdGrid(mode){
+  const gridId=mode+'StdGrid';
+  const grid=document.getElementById(gridId);
+  if(!grid)return;
+  grid.innerHTML='';
+  PRODUCTS_STANDARD.forEach(function(p){
+    const btn=document.createElement('button');
+    btn.className='std-product-btn'+(cards[mode].find(c=>c.productId===p.id)?' added':'');
+    btn.textContent=p.name;
+    btn.onclick=function(){addStdCard(mode,p.id);};
+    grid.appendChild(btn);
+  });
+}
+function addStdCard(mode,productId){
+  const p=PRODUCTS_STANDARD.find(x=>x.id===productId);if(!p)return;
+  if(cards[mode].find(c=>c.productId===productId)){showToast('すでに追加済みです');return;}
+  const card={id:genId(),productId:p.id,productName:p.name,price:p.price,memo:''};
+  if(mode==='process')card.destinations=DESTINATIONS.map(d=>({...d,qty:0}));
+  else card.qty=0;
+  cards[mode].push(card);
+  renderStdGrid(mode);
+  renderCards(mode);updateSaveSummary(mode);
+}
+function addInventoryCard(productId,productName){
+  if(cards.inventory.find(c=>c.productId===productId)){showToast('すでに追加済みです');return;}
+  cards.inventory.push({id:genId(),productId,productName,price:0,qty:0,memo:''});
+  renderCards('inventory');
+}
+function renderCards(mode){
+  const el=document.getElementById(mode+'Cards');
+  if(!cards[mode].length){
+    if(mode==='inventory')el.innerHTML='<div class="empty-state"><div class="emoji">&#128230;</div><p style="font-size:13px;">「商品を追加」から始めてください</p></div>';
+    else el.innerHTML='';
+    return;
+  }
+  el.innerHTML='';
+  cards[mode].forEach(card=>{
+    const div=document.createElement('div');div.className='product-card';div.id='card_'+card.id;
+    div.innerHTML=buildCardHTML(mode,card);el.appendChild(div);
+  });
+}
+function buildCardHTML(mode,card){
+  const total=mode==='process'?card.destinations.reduce((s,d)=>s+d.qty,0):card.qty;
+  const amount=total*(card.price||0);
+  let body='';
+  if(mode==='process'){
+    body='<div class="product-card-body">'+card.destinations.map(function(d){
+      return '<div class="dest-row"><div class="dest-label">'+d.label+'</div><div class="qty-control">'+
+        '<button class="qty-btn minus" onmousedown="startLP(\''+card.id+'\',\''+d.id+'\',-1)" onmouseup="stopLP()" ontouchstart="startLP(\''+card.id+'\',\''+d.id+'\',-1)" ontouchend="stopLP()" onclick="changeQty(\''+card.id+'\',\''+d.id+'\',-1)">−</button>'+
+        '<div class="qty-display" onclick="openQtyDlg(\''+card.id+'\',\''+d.id+'\',\''+d.label+'\','+d.qty+')">'+d.qty+'</div>'+
+        '<button class="qty-btn plus" onmousedown="startLP(\''+card.id+'\',\''+d.id+'\',1)" onmouseup="stopLP()" ontouchstart="startLP(\''+card.id+'\',\''+d.id+'\',1)" ontouchend="stopLP()" onclick="changeQty(\''+card.id+'\',\''+d.id+'\',1)">＋</button>'+
+        '</div></div>';
+    }).join('')+'</div>';
+  }else{
+    const lbl=mode==='waste'?'廃棄数量':'実在庫数';
+    body='<div class="single-qty-row"><div style="font-size:13px;color:var(--text-muted);">'+lbl+'</div>'+
+      '<div class="qty-control">'+
+      '<button class="qty-btn minus" onmousedown="startLPS(\''+card.id+'\',-1)" onmouseup="stopLP()" ontouchstart="startLPS(\''+card.id+'\',-1)" ontouchend="stopLP()" onclick="changeQtySingle(\''+card.id+'\',-1)">−</button>'+
+      '<div class="qty-display" onclick="openQtyDlgSingle(\''+card.id+'\','+card.qty+')">'+card.qty+'</div>'+
+      '<button class="qty-btn plus" onmousedown="startLPS(\''+card.id+'\',1)" onmouseup="stopLP()" ontouchstart="startLPS(\''+card.id+'\',1)" ontouchend="stopLP()" onclick="changeQtySingle(\''+card.id+'\',1)">＋</button>'+
+      '</div></div>';
+  }
+  const badges='<div style="display:flex;align-items:center;gap:5px;">'+
+    (total>0?'<div class="total-badge">計 '+total+'束</div>':'')+
+    (amount>0&&mode!=='inventory'?'<div class="amount-badge">'+fmtYen(amount)+'</div>':'')+
+    '<button class="remove-card-btn" onclick="removeCard(\''+card.id+'\',\''+mode+'\')">×</button></div>';
+  return '<div class="product-card-header"><div class="product-name">'+card.productName+'</div>'+badges+'</div>'+body+
+    '<div class="memo-row"><div class="memo-label">メモ（花材など）</div>'+
+    '<textarea class="memo-input" rows="2" placeholder="例：小菊4本・SPカーネ2本…" oninput="updateCardMemo(\''+card.id+'\',this.value)">'+card.memo+'</textarea></div>';
+}
+function removeCard(id,mode){cards[mode]=cards[mode].filter(c=>c.id!==id);renderStdGrid(mode);renderCards(mode);updateSaveSummary(mode);}
+function updateCardMemo(id,val){for(const m of['process','waste','inventory']){const c=cards[m].find(c=>c.id===id);if(c){c.memo=val;return;}}}
+
+// 追加商品（繁忙期）
+function addExtraCard(mode){
+  const sel=document.getElementById(mode+'ExtraSelect');
+  const key=sel.value;if(!key)return;
+  const p=PRODUCTS_SEASON[key];if(!p)return;
+  if(extras[mode].find(e=>e.id===key&&!e.isSpot)){showToast('すでに追加済みです');return;}
+  const item={uid:genId(),id:key,name:p.name,price:p.price,isSpot:false};
+  if(mode==='process')item.destinations=DESTINATIONS.map(d=>({...d,qty:0}));
+  else item.qty=0;
+  extras[mode].push(item);sel.value='';
+  renderExtras(mode);updateSaveSummary(mode);
+}
+function renderExtras(mode){
+  const el=document.getElementById(mode+'ExtraList');el.innerHTML='';
+  extras[mode].filter(e=>!e.isSpot).forEach(item=>{
+    const div=document.createElement('div');div.id='extra_'+item.uid;
+    div.style.cssText='border-bottom:.5px solid var(--border);padding-bottom:10px;margin-bottom:8px;';
+    div.innerHTML=buildExtraHTML(mode,item);el.appendChild(div);
+  });
+}
+function buildExtraHTML(mode,item){
+  const total=mode==='process'?item.destinations.reduce((s,d)=>s+d.qty,0):item.qty;
+  const amount=total*item.price;
+  let qtyHtml='';
+  if(mode==='process'){
+    qtyHtml='<div style="padding:0 0 4px;">'+item.destinations.map(function(d){
+      return '<div class="dest-row"><div class="dest-label">'+d.label+'</div><div class="qty-control">'+
+        '<button class="qty-btn minus" onmousedown="startLPE(\''+item.uid+'\',\''+d.id+'\',-1)" onmouseup="stopLP()" ontouchstart="startLPE(\''+item.uid+'\',\''+d.id+'\',-1)" ontouchend="stopLP()" onclick="changeExtraQty(\''+item.uid+'\',\''+d.id+'\',-1)">−</button>'+
+        '<div class="qty-display" onclick="openQtyDlgExtra(\''+item.uid+'\',\''+d.id+'\',\''+d.label+'\','+d.qty+')">'+d.qty+'</div>'+
+        '<button class="qty-btn plus" onmousedown="startLPE(\''+item.uid+'\',\''+d.id+'\',1)" onmouseup="stopLP()" ontouchstart="startLPE(\''+item.uid+'\',\''+d.id+'\',1)" ontouchend="stopLP()" onclick="changeExtraQty(\''+item.uid+'\',\''+d.id+'\',1)">＋</button>'+
+        '</div></div>';
+    }).join('')+'</div>';
+  }else{
+    qtyHtml='<div class="single-qty-row" style="padding:8px 0;">'+
+      '<div style="font-size:13px;color:var(--text-muted);">廃棄数量</div>'+
+      '<div class="qty-control">'+
+      '<button class="qty-btn minus" onmousedown="startLPES(\''+item.uid+'\',-1)" onmouseup="stopLP()" ontouchstart="startLPES(\''+item.uid+'\',-1)" ontouchend="stopLP()" onclick="changeExtraQtySingle(\''+item.uid+'\',-1)">−</button>'+
+      '<div class="qty-display" onclick="openQtyDlgExtraSingle(\''+item.uid+'\','+item.qty+')">'+item.qty+'</div>'+
+      '<button class="qty-btn plus" onmousedown="startLPES(\''+item.uid+'\',1)" onmouseup="stopLP()" ontouchstart="startLPES(\''+item.uid+'\',1)" ontouchend="stopLP()" onclick="changeExtraQtySingle(\''+item.uid+'\',1)">＋</button>'+
+      '</div></div>';
+  }
+  return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'+
+    '<span style="font-size:14px;font-weight:600;">'+item.name+'<span class="badge-season">繁忙期</span></span>'+
+    '<div style="display:flex;gap:5px;align-items:center;">'+
+    (total>0?'<div class="total-badge">計 '+total+'束</div>':'')+
+    (amount>0?'<div class="amount-badge">'+fmtYen(amount)+'</div>':'')+
+    '<button class="remove-extra-btn" onclick="removeExtra(\''+item.uid+'\',\''+currentMode+'\')">×</button></div></div>'+qtyHtml;
+}
+function removeExtra(uid,mode){extras[mode]=extras[mode].filter(e=>e.uid!==uid);renderExtras(mode);renderSpots(mode);updateSaveSummary(mode);}
+
+// スポット商品
+function addSpotCard(mode){
+  const nameEl=document.getElementById(mode+'SpotName');
+  const priceEl=document.getElementById(mode+'SpotPrice');
+  const name=nameEl.value.trim();
+  const price=parseInt(priceEl.value)||0;
+  if(!name){showToast('商品名を入力してください');return;}
+  const item={uid:genId(),id:'spot_'+Date.now(),name,price,isSpot:true};
+  if(mode==='process')item.destinations=DESTINATIONS.map(d=>({...d,qty:0}));
+  else item.qty=0;
+  extras[mode].push(item);nameEl.value='';priceEl.value='';
+  renderSpots(mode);updateSaveSummary(mode);
+}
+function renderSpots(mode){
+  const el=document.getElementById(mode+'SpotList');el.innerHTML='';
+  extras[mode].filter(e=>e.isSpot).forEach(item=>{
+    const div=document.createElement('div');div.id='spot_'+item.uid;
+    div.style.cssText='border-bottom:.5px solid var(--border);padding-bottom:10px;margin-bottom:8px;';
+    div.innerHTML=buildSpotHTML(mode,item);el.appendChild(div);
+  });
+}
+function buildSpotHTML(mode,item){
+  const total=mode==='process'?item.destinations.reduce((s,d)=>s+d.qty,0):item.qty;
+  const amount=total*item.price;
+  let qtyHtml='';
+  if(mode==='process'){
+    qtyHtml='<div style="padding:0 0 4px;">'+item.destinations.map(function(d){
+      return '<div class="dest-row"><div class="dest-label">'+d.label+'</div><div class="qty-control">'+
+        '<button class="qty-btn minus" onmousedown="startLPE(\''+item.uid+'\',\''+d.id+'\',-1)" onmouseup="stopLP()" ontouchstart="startLPE(\''+item.uid+'\',\''+d.id+'\',-1)" ontouchend="stopLP()" onclick="changeExtraQty(\''+item.uid+'\',\''+d.id+'\',-1)">−</button>'+
+        '<div class="qty-display" onclick="openQtyDlgExtra(\''+item.uid+'\',\''+d.id+'\',\''+d.label+'\','+d.qty+')">'+d.qty+'</div>'+
+        '<button class="qty-btn plus" onmousedown="startLPE(\''+item.uid+'\',\''+d.id+'\',1)" onmouseup="stopLP()" ontouchstart="startLPE(\''+item.uid+'\',\''+d.id+'\',1)" ontouchend="stopLP()" onclick="changeExtraQty(\''+item.uid+'\',\''+d.id+'\',1)">＋</button>'+
+        '</div></div>';
+    }).join('')+'</div>';
+  }else{
+    qtyHtml='<div class="single-qty-row" style="padding:8px 0;">'+
+      '<div style="font-size:13px;color:var(--text-muted);">廃棄数量</div>'+
+      '<div class="qty-control">'+
+      '<button class="qty-btn minus" onmousedown="startLPES(\''+item.uid+'\',-1)" onmouseup="stopLP()" ontouchstart="startLPES(\''+item.uid+'\',-1)" ontouchend="stopLP()" onclick="changeExtraQtySingle(\''+item.uid+'\',-1)">−</button>'+
+      '<div class="qty-display" onclick="openQtyDlgExtraSingle(\''+item.uid+'\','+item.qty+')">'+item.qty+'</div>'+
+      '<button class="qty-btn plus" onmousedown="startLPES(\''+item.uid+'\',1)" onmouseup="stopLP()" ontouchstart="startLPES(\''+item.uid+'\',1)" ontouchend="stopLP()" onclick="changeExtraQtySingle(\''+item.uid+'\',1)">＋</button>'+
+      '</div></div>';
+  }
+  const priceLabel=item.price?' ('+fmtYen(item.price)+')':'';
+  return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'+
+    '<span style="font-size:14px;font-weight:600;">'+item.name+'<span class="badge-spot">スポット</span><span style="font-size:11px;color:var(--text-hint);">'+priceLabel+'</span></span>'+
+    '<div style="display:flex;gap:5px;align-items:center;">'+
+    (total>0?'<div class="total-badge">計 '+total+'束</div>':'')+
+    (amount>0?'<div class="amount-badge">'+fmtYen(amount)+'</div>':'')+
+    '<button class="remove-extra-btn" onclick="removeExtra(\''+item.uid+'\',\''+currentMode+'\')">×</button></div></div>'+qtyHtml;
+}
+
+function updateSaveSummary(mode){
+  if(!['process','waste'].includes(mode))return;
+  const el=document.getElementById(mode+'SaveSummary');if(!el)return;
+  let totalQty=0,totalAmount=0;
+  cards[mode].forEach(c=>{const q=mode==='process'?c.destinations.reduce((s,d)=>s+d.qty,0):c.qty;totalQty+=q;totalAmount+=q*(c.price||0);});
+  extras[mode].forEach(e=>{const q=mode==='process'?e.destinations.reduce((s,d)=>s+d.qty,0):e.qty;totalQty+=q;totalAmount+=q*(e.price||0);});
+  el.textContent=totalQty>0?'合計 '+totalQty+'束 / '+fmtYen(totalAmount):'';
+}
+
+// 棚卸ピッカー（ALL_PRODUCTS = use_inventory:true の全商品）
+function openInventoryPicker(){
+  const el=document.getElementById('inventoryPickerList');el.innerHTML='';
+  // 通常商品（加工対象）
+  var std=ALL_PRODUCTS.filter(function(p){return p.use_process;});
+  // 在庫管理専用（キープフラワーなど）
+  var invOnly=ALL_PRODUCTS.filter(function(p){return !p.use_process;});
+  std.forEach(function(p){
+    const div=document.createElement('div');div.className='product-list-item'+(p.season?' season':'');div.textContent=p.name;
+    div.onclick=function(){addInventoryCard(p.id,p.name);closeInventoryPicker(null);};el.appendChild(div);
+  });
+  if(invOnly.length){
+    const sep=document.createElement('div');
+    sep.style.cssText='font-size:11px;font-weight:700;color:var(--gray);letter-spacing:.06em;margin:10px 0 4px;';
+    sep.textContent='在庫管理品';
+    el.appendChild(sep);
+    invOnly.forEach(function(p){
+      const div=document.createElement('div');div.className='product-list-item';div.textContent=p.name;
+      div.style.borderLeft='3px solid var(--blue)';
+      div.onclick=function(){addInventoryCard(p.id,p.name);closeInventoryPicker(null);};el.appendChild(div);
+    });
+  }
+  const spotDiv=document.createElement('div');
+  spotDiv.style.cssText='border-top:.5px solid var(--border);margin-top:10px;padding-top:10px;';
+  spotDiv.innerHTML='<div style="font-size:11px;color:var(--text-hint);margin-bottom:6px;">スポット品</div><div style="display:flex;gap:8px;"><input id="invSpotName" class="spot-name-input" placeholder="商品名"><button class="add-item-btn" onclick="addInvSpot()">追加</button></div>';
+  el.appendChild(spotDiv);
+  document.getElementById('inventoryPickerOverlay').classList.add('open');
+}
+function addInvSpot(){
+  const name=document.getElementById('invSpotName').value.trim();
+  if(!name){showToast('商品名を入力してください');return;}
+  addInventoryCard('spot_'+Date.now(),name);closeInventoryPicker(null);
+}
+function closeInventoryPicker(e){if(e===null||e.target===document.getElementById('inventoryPickerOverlay'))document.getElementById('inventoryPickerOverlay').classList.remove('open');}
+
+// QTY
+function changeQty(cid,did,delta){
+  const card=cards[currentMode].find(c=>c.id===cid);if(!card)return;
+  const d=card.destinations.find(d=>d.id===did);if(d){d.qty=Math.max(0,d.qty+delta);renderCards(currentMode);updateSaveSummary(currentMode);}
+}
+function changeQtySingle(cid,delta){
+  const card=[...cards.process,...cards.waste,...cards.inventory].find(c=>c.id===cid);
+  if(card){card.qty=Math.max(0,card.qty+delta);renderCards(currentMode);updateSaveSummary(currentMode);}
+}
+function changeExtraQty(uid,did,delta){
+  const item=extras[currentMode].find(e=>e.uid===uid);if(!item)return;
+  const d=item.destinations.find(d=>d.id===did);if(d){d.qty=Math.max(0,d.qty+delta);renderExtras(currentMode);renderSpots(currentMode);updateSaveSummary(currentMode);}
+}
+function changeExtraQtySingle(uid,delta){
+  const item=extras[currentMode].find(e=>e.uid===uid);
+  if(item){item.qty=Math.max(0,item.qty+delta);renderExtras(currentMode);renderSpots(currentMode);updateSaveSummary(currentMode);}
+}
+function startLP(cid,did,delta){stopLP();longPressTimer=setTimeout(function(){longPressInterval=setInterval(function(){changeQty(cid,did,delta);},80);},500);}
+function startLPS(cid,delta){stopLP();longPressTimer=setTimeout(function(){longPressInterval=setInterval(function(){changeQtySingle(cid,delta);},80);},500);}
+function startLPE(uid,did,delta){stopLP();longPressTimer=setTimeout(function(){longPressInterval=setInterval(function(){changeExtraQty(uid,did,delta);},80);},500);}
+function startLPES(uid,delta){stopLP();longPressTimer=setTimeout(function(){longPressInterval=setInterval(function(){changeExtraQtySingle(uid,delta);},80);},500);}
+function stopLP(){if(longPressTimer){clearTimeout(longPressTimer);longPressTimer=null;}if(longPressInterval){clearInterval(longPressInterval);longPressInterval=null;}}
+
+function openQtyDlg(cid,did,label,cur){
+  document.getElementById('qtyDialogLabel').textContent=label+' の数量';
+  document.getElementById('qtyDialogInput').value=cur;
+  document.getElementById('qtyDialog').classList.add('open');
+  setTimeout(function(){var i=document.getElementById('qtyDialogInput');i.focus();i.select();},100);
+  qtyCallback=function(v){var card=cards[currentMode].find(c=>c.id===cid);if(!card)return;var d=card.destinations.find(d=>d.id===did);if(d){d.qty=Math.max(0,parseInt(v)||0);renderCards(currentMode);updateSaveSummary(currentMode);}};
+}
+function openQtyDlgSingle(cid,cur){
+  var card=[...cards.process,...cards.waste,...cards.inventory].find(c=>c.id===cid);
+  document.getElementById('qtyDialogLabel').textContent=(card?card.productName:'')+'の数量';
+  document.getElementById('qtyDialogInput').value=cur;
+  document.getElementById('qtyDialog').classList.add('open');
+  setTimeout(function(){var i=document.getElementById('qtyDialogInput');i.focus();i.select();},100);
+  qtyCallback=function(v){if(card){card.qty=Math.max(0,parseInt(v)||0);renderCards(currentMode);updateSaveSummary(currentMode);}};
+}
+function openQtyDlgExtra(uid,did,label,cur){
+  document.getElementById('qtyDialogLabel').textContent=label+' の数量';
+  document.getElementById('qtyDialogInput').value=cur;
+  document.getElementById('qtyDialog').classList.add('open');
+  setTimeout(function(){var i=document.getElementById('qtyDialogInput');i.focus();i.select();},100);
+  qtyCallback=function(v){var item=extras[currentMode].find(e=>e.uid===uid);if(!item)return;var d=item.destinations.find(d=>d.id===did);if(d){d.qty=Math.max(0,parseInt(v)||0);renderExtras(currentMode);renderSpots(currentMode);updateSaveSummary(currentMode);}};
+}
+function openQtyDlgExtraSingle(uid,cur){
+  var item=extras[currentMode].find(e=>e.uid===uid);
+  document.getElementById('qtyDialogLabel').textContent=(item?item.name:'')+'の数量';
+  document.getElementById('qtyDialogInput').value=cur;
+  document.getElementById('qtyDialog').classList.add('open');
+  setTimeout(function(){var i=document.getElementById('qtyDialogInput');i.focus();i.select();},100);
+  qtyCallback=function(v){if(item){item.qty=Math.max(0,parseInt(v)||0);renderExtras(currentMode);renderSpots(currentMode);updateSaveSummary(currentMode);}};
+}
+function closeQtyDialog(ok){if(ok&&qtyCallback)qtyCallback(document.getElementById('qtyDialogInput').value);document.getElementById('qtyDialog').classList.remove('open');qtyCallback=null;}
+document.getElementById('qtyDialogInput').addEventListener('keydown',function(e){if(e.key==='Enter')closeQtyDialog(true);if(e.key==='Escape')closeQtyDialog(false);});
+
+// SAVE
+async function saveRecords(mode){
+  var allItems=[];
+  cards[mode].forEach(function(card){
+    var totalQty=0;var items=[];
+    if(mode==='process'){
+      card.destinations.forEach(function(d){if(d.qty>0){items.push({product_name:card.productName,product_id:card.productId,destination_id:d.id,destination_label:d.label,quantity:d.qty});totalQty+=d.qty;}});
+      if(totalQty===0)return;
+    }else{totalQty=card.qty;items.push({product_name:card.productName,product_id:card.productId,destination_id:null,destination_label:null,quantity:card.qty});}
+    allItems.push({productName:card.productName,productId:card.productId,price:card.price||0,totalQty,memo:card.memo||null,items});
+  });
+  if(mode!=='inventory'){
+    extras[mode].forEach(function(e){
+      var totalQty=0;var items=[];
+      if(mode==='process'){
+        e.destinations.forEach(function(d){if(d.qty>0){items.push({product_name:e.name,product_id:e.id,destination_id:d.id,destination_label:d.label,quantity:d.qty});totalQty+=d.qty;}});
+        if(totalQty===0)return;
+      }else{totalQty=e.qty;items.push({product_name:e.name,product_id:e.id,destination_id:null,destination_label:null,quantity:e.qty});}
+      allItems.push({productName:e.name,productId:e.id,price:e.price||0,totalQty,memo:null,items});
+    });
+  }
+  if(!allItems.length){showToast('保存できる数量がありません');return;}
+  showLoading('保存中...');
+  var saved=0;
+  for(var a of allItems){
+    var totalAmount=(mode==='inventory')?0:a.totalQty*a.price;
+    try{
+      var arr=await sbFetch('/rest/v1/processing_records',{method:'POST',body:JSON.stringify({
+        record_date:currentDate,recorded_at:new Date().toISOString(),staff_name:currentStaff,
+        record_type:mode,product_name:a.productName,product_id:a.productId,
+        price:a.price,total_qty:a.totalQty,total_amount:totalAmount,memo:a.memo
+      })});
+      if(a.items.length){
+        await sbFetch('/rest/v1/processing_items',{method:'POST',headers:{'Prefer':''},
+          body:JSON.stringify(a.items.map(i=>({...i,processing_record_id:arr[0].id})))});
+      }
+      saved++;
+    }catch(e){console.error(e);}
+  }
+  hideLoading();
+  if(saved>0){
+    showToast('✅ '+saved+'件を保存しました');
+    cards[mode]=[];
+    if(mode!=='inventory')extras[mode]=[];
+    renderCards(mode);
+    if(mode!=='inventory'){renderExtras(mode);renderSpots(mode);}
+    updateSaveSummary(mode);
+  }else showToast('保存に失敗しました',3000);
+}
+
+// RECORDS
+async function loadRecords(){
+  var today=todayISO();
+  document.getElementById('recordsDateLabel').textContent=formatDate(today);
+  document.getElementById('recordsBody').innerHTML='<div class="empty-state"><div class="emoji">&#128203;</div><p>読み込み中...</p></div>';
+  try{
+    recordsData=await sbFetch('/rest/v1/processing_records?record_date=eq.'+today+'&order=recorded_at.asc');
+    if(recordsData.length){
+      var ids=recordsData.map(r=>'"'+r.id+'"').join(',');
+      var items=await sbFetch('/rest/v1/processing_items?processing_record_id=in.('+ids+')');
+      recordsData.forEach(r=>{r.items=items.filter(i=>i.processing_record_id===r.id);});
+    }
+  }catch(e){recordsData=[];}
+  renderRecords();
+}
+function switchRecordTab(tab){
+  currentRecordTab=tab;
+  ['card','table'].forEach(t=>document.getElementById('rtab-'+t).className='hist-tab'+(t===tab?' active':''));
+  renderRecords();
+}
+function renderRecords(){
+  var el=document.getElementById('recordsBody');
+  if(!recordsData.length){el.innerHTML='<div class="empty-state"><div class="emoji">&#128203;</div><p>本日の記録はまだありません</p></div>';return;}
+  var processAmount=recordsData.filter(r=>r.record_type==='process').reduce((s,r)=>s+(r.total_amount||0),0);
+  var wasteAmount=recordsData.filter(r=>r.record_type==='waste').reduce((s,r)=>s+(r.total_amount||0),0);
+  var amBar='<div class="today-amount-bar"><div><div class="lbl">&#127800; 本日の加工金額</div>'+(wasteAmount>0?'<div style="font-size:11px;color:var(--purple);margin-top:2px;">廃棄 '+fmtYen(wasteAmount)+'</div>':'')+'</div><div class="val">'+fmtYen(processAmount)+'</div></div>';
+  if(currentRecordTab==='card'){
+    var tLabel={process:'加工',waste:'廃棄',inventory:'棚卸'};
+    var tBadge={process:'badge-process',waste:'badge-waste',inventory:'badge-inventory'};
+    el.innerHTML=amBar+recordsData.map(function(r){
+      var detail=r.record_type==='process'&&r.items&&r.items.length?r.items.map(i=>i.destination_label+'：'+i.quantity+'束').join('　'):'';
+      return '<div class="record-card"><div class="record-card-top"><span class="type-badge '+tBadge[r.record_type]+'">'+tLabel[r.record_type]+'</span><span style="font-size:11px;color:var(--text-hint);">'+r.staff_name+'</span></div>'+
+        '<div class="record-product">'+r.product_name+'</div>'+
+        '<div class="record-total">合計 '+r.total_qty+'束</div>'+
+        (r.total_amount>0?'<div class="record-amount">'+fmtYen(r.total_amount)+'</div>':'')+
+        (detail?'<div class="record-detail">'+detail+'</div>':'')+
+        (r.memo?'<div class="record-detail">&#128221; '+r.memo+'</div>':'')+
+        '</div>';
+    }).join('');
+  }else{
+    var products=[...new Set(recordsData.map(r=>r.product_name))];
+    var types=['process','waste','inventory'];
+    var tLbl={process:'加工',waste:'廃棄',inventory:'棚卸'};
+    var matrix={};
+    products.forEach(p=>{matrix[p]={process:0,waste:0,inventory:0};});
+    recordsData.forEach(r=>{if(matrix[r.product_name])matrix[r.product_name][r.record_type]+=r.total_qty;});
+    el.innerHTML=amBar+'<div class="cross-table-wrap"><table class="cross-table"><thead><tr><th>商品</th>'+types.map(t=>'<th>'+tLbl[t]+'</th>').join('')+'</tr></thead><tbody>'+
+      products.map(p=>'<tr><td>'+p+'</td>'+types.map(t=>'<td class="'+(matrix[p][t]>0?'nonzero':'')+'">'+(matrix[p][t]>0?matrix[p][t]:'—')+'</td>').join('')+'</tr>').join('')+
+      '</tbody></table></div>';
+  }
+}
+
+// SUMMARY
+async function loadSummary(){
+  var today=todayISO();
+  var from,to;
+  if(currentSumTab==='today'){from=to=today;}
+  else if(currentSumTab==='week'){from=weekStart(today);to=weekEnd(today);}
+  else if(currentSumTab==='month'){from=monthStart(today);to=monthEnd(today);}
+  else{from=document.getElementById('sum-from')?document.getElementById('sum-from').value:today;to=document.getElementById('sum-to')?document.getElementById('sum-to').value:today;}
+  var el=document.getElementById('summaryBody');
+  if(currentSumTab==='custom'){
+    el.innerHTML='<div style="padding:8px 0 14px;"><div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;">期間を指定</div><div class="sum-date-row"><input type="date" class="sum-date-input" id="sum-from" value="'+from+'"><span style="font-size:13px;">〜</span><input type="date" class="sum-date-input" id="sum-to" value="'+to+'"><button onclick="loadSummary()" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">表示</button></div></div>';
+    return;
+  }
+  el.innerHTML='<div class="empty-state"><div class="emoji">&#128202;</div><p>読み込み中...</p></div>';
+  try{
+    var data=await sbFetch('/rest/v1/processing_records?record_date=gte.'+from+'&record_date=lte.'+to+'&order=record_date.asc');
+    if(!data.length){el.innerHTML='<div class="empty-state"><div class="emoji">&#128202;</div><p>この期間の記録はありません</p></div>';return;}
+    var ids=data.map(r=>'"'+r.id+'"').join(',');
+    var items=await sbFetch('/rest/v1/processing_items?processing_record_id=in.('+ids+')');
+    data.forEach(r=>{r.items=items.filter(i=>i.processing_record_id===r.id);});
+    var processData=data.filter(r=>r.record_type==='process');
+    var wasteData=data.filter(r=>r.record_type==='waste');
+    var processAmount=processData.reduce((s,r)=>s+(r.total_amount||0),0);
+    var wasteAmount=wasteData.reduce((s,r)=>s+(r.total_amount||0),0);
+    var byProduct={},byProductAmt={},byStaff={},byStaffAmt={},byDest={},byDestProduct={},wasteByProduct={};
+    processData.forEach(r=>{
+      byProduct[r.product_name]=(byProduct[r.product_name]||0)+r.total_qty;
+      byProductAmt[r.product_name]=(byProductAmt[r.product_name]||0)+(r.total_amount||0);
+      byStaff[r.staff_name]=(byStaff[r.staff_name]||0)+r.total_qty;
+      byStaffAmt[r.staff_name]=(byStaffAmt[r.staff_name]||0)+(r.total_amount||0);
+      r.items.forEach(function(i){
+        if(!i.destination_label)return;
+        byDest[i.destination_label]=(byDest[i.destination_label]||0)+i.quantity;
+        if(!byDestProduct[i.destination_label])byDestProduct[i.destination_label]={};
+        byDestProduct[i.destination_label][i.product_name]=(byDestProduct[i.destination_label][i.product_name]||0)+i.quantity;
+      });
+    });
+    wasteData.forEach(r=>{wasteByProduct[r.product_name]=(wasteByProduct[r.product_name]||0)+r.total_qty;});
+    var dateLabel=from===to?formatDate(from):formatDate(from)+' 〜 '+formatDate(to);
+    el.innerHTML='<div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">'+dateLabel+'</div>'+
+      '<div class="sum-amount-card"><div class="title">&#128176; 加工金額合計</div><div class="amount">'+fmtYen(processAmount)+'</div>'+(wasteAmount>0?'<div class="sub">廃棄金額：'+fmtYen(wasteAmount)+'</div>':'')+'</div>'+
+      makeSumSection('&#127800; 商品別 加工数・金額',byProduct,byProductAmt)+
+      makeSumSectionDest('&#127978; 納品先別 加工数',byDest,byDestProduct)+
+      (Object.keys(wasteByProduct).length?makeSumSectionSimple('&#128465; 廃棄 商品別',wasteByProduct):'')+
+      makeSumSection('&#128100; 担当者別 加工数・金額',byStaff,byStaffAmt);
+    document.querySelectorAll('.sum-section-header').forEach(function(h){
+      h.classList.add('acc-open');h.nextElementSibling.classList.add('open');
+      h.onclick=function(){h.classList.toggle('acc-open');h.nextElementSibling.classList.toggle('open');};
+    });
+  }catch(e){el.innerHTML='<div class="empty-state"><div class="emoji">&#9888;&#65039;</div><p>読み込みに失敗しました</p></div>';}
+}
+function makeSumSection(title,qtyObj,amtObj){
+  var rows=Object.entries(qtyObj).sort((a,b)=>b[1]-a[1]).map(([k,v])=>'<div class="sum-row"><span class="lbl">'+k+'</span><span><span class="val">'+v+'束</span> <span class="val purple">'+fmtYen(amtObj[k]||0)+'</span></span></div>').join('');
+  if(!rows)return '';
+  return '<div class="sum-section"><div class="sum-section-header"><span>'+title+'</span><span class="acc-icon">▼</span></div><div class="sum-section-body">'+rows+'</div></div>';
+}
+function makeSumSectionDest(title,destObj,destProductObj){
+  var rows=Object.entries(destObj).sort((a,b)=>b[1]-a[1]).map(function(kv){
+    var destName=kv[0],total=kv[1];
+    var products=destProductObj[destName]||{};
+    var detailId='dest-detail-'+destName.replace(/[^a-z0-9]/gi,'_');
+    var detailRows=Object.entries(products).sort((a,b)=>b[1]-a[1]).map(([pname,qty])=>'<div style="display:flex;justify-content:space-between;padding:5px 0 5px 10px;border-bottom:.5px solid var(--border);font-size:12px;"><span style="color:var(--text-muted);">'+pname+'</span><span style="font-weight:600;color:var(--green);">'+qty+'束</span></div>').join('');
+    return '<div>'+
+      '<div class="sum-row" style="cursor:pointer;" onclick="toggleDestDetail(\''+detailId+'\')">'+
+        '<span class="lbl">'+destName+'</span>'+
+        '<span style="display:flex;align-items:center;gap:6px;"><span class="val">'+total+'束</span><span id="arr-'+detailId+'" style="font-size:11px;color:var(--gray);">▶</span></span>'+
+      '</div>'+
+      '<div id="'+detailId+'" style="display:none;background:var(--bg-surface);border-radius:var(--radius-sm);margin-bottom:4px;overflow:hidden;">'+detailRows+'</div>'+
+    '</div>';
+  }).join('');
+  if(!rows)return '';
+  return '<div class="sum-section"><div class="sum-section-header"><span>'+title+'</span><span class="acc-icon">▼</span></div><div class="sum-section-body">'+rows+'</div></div>';
+}
+function toggleDestDetail(id){
+  var el=document.getElementById(id);
+  var arr=document.getElementById('arr-'+id);
+  if(!el)return;
+  var open=el.style.display==='block';
+  el.style.display=open?'none':'block';
+  if(arr)arr.textContent=open?'▶':'▼';
+}
+function makeSumSectionSimple(title,obj){
+  var rows=Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,v])=>'<div class="sum-row"><span class="lbl">'+k+'</span><span class="val">'+v+'束</span></div>').join('');
+  if(!rows)return '';
+  return '<div class="sum-section"><div class="sum-section-header"><span>'+title+'</span><span class="acc-icon">▼</span></div><div class="sum-section-body">'+rows+'</div></div>';
+}
+function switchSumTab(tab){
+  currentSumTab=tab;
+  ['today','week','month','custom'].forEach(t=>document.getElementById('stab-'+t).className='sum-tab'+(t===tab?' active':''));
+  loadSummary();
+}
+
+// CALENDAR
+async function renderCalendar(){
+  document.getElementById('calMonthLabel').textContent=calYear+'年 '+(calMonth+1)+'月';
+  var from=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-01';
+  var lastDay=new Date(calYear,calMonth+1,0).getDate();
+  var to=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(lastDay).padStart(2,'0');
+  try{
+    var data=await sbFetch('/rest/v1/processing_records?record_date=gte.'+from+'&record_date=lte.'+to+'&order=record_date.asc');
+    calData={};data.forEach(r=>{if(!calData[r.record_date])calData[r.record_date]=[];calData[r.record_date].push(r);});
+  }catch(e){calData={};}
+  buildCalGrid();
+}
+function buildCalGrid(){
+  var dh=document.getElementById('calDowRow');
+  dh.innerHTML=['日','月','火','水','木','金','土'].map((d,i)=>'<div class="cal-dow" style="'+(i===0?'color:#c0392b':i===6?'color:#1a6ea8':'')+'">'+d+'</div>').join('');
+  var grid=document.getElementById('calGrid');grid.innerHTML='';
+  var firstDow=new Date(calYear,calMonth,1).getDay();
+  var lastDate=new Date(calYear,calMonth+1,0).getDate();
+  var todayStr=todayISO();
+  for(var i=0;i<firstDow;i++){var dd=document.createElement('div');dd.className='cal-day other-month';grid.appendChild(dd);}
+  for(var date=1;date<=lastDate;date++){
+    var iso=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(date).padStart(2,'0');
+    var dow=new Date(calYear,calMonth,date).getDay();
+    var cell=document.createElement('div');
+    cell.className='cal-day'+(iso===todayStr?' today-cell':'')+(dow===0?' sun':dow===6?' sat':'');
+    var num=document.createElement('div');num.className='cal-day-num';num.textContent=date;cell.appendChild(num);
+    var entries=calData[iso]||[];
+    var summary={};
+    entries.filter(r=>r.record_type==='process').forEach(r=>{summary[r.product_name]=(summary[r.product_name]||0)+r.total_qty;});
+    Object.entries(summary).forEach(function(kv){
+      var chip=document.createElement('div');chip.className='cal-chip chip-process';
+      chip.textContent=kv[0].replace('仏束花 ','').replace('キープフラワー ','')+' '+kv[1];cell.appendChild(chip);
+    });
+    if(entries.some(r=>r.record_type==='waste')){var wc=document.createElement('div');wc.className='cal-chip chip-waste';wc.textContent='廃棄あり';cell.appendChild(wc);}
+    if(entries.some(r=>r.record_type==='inventory')){var ic=document.createElement('div');ic.className='cal-chip chip-inventory';ic.textContent='棚卸';cell.appendChild(ic);}
+    (function(isoDate){cell.onclick=function(){openDayDetail(isoDate);};})(iso);
+    grid.appendChild(cell);
+  }
+}
+function changeCalMonth(d){calMonth+=d;if(calMonth<0){calMonth=11;calYear--;}if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
+
+async function openDayDetail(iso){
+  document.getElementById('dayDetailTitle').textContent=formatDate(iso);
+  var body=document.getElementById('dayDetailBody');
+  body.innerHTML='<div style="text-align:center;padding:20px;color:var(--gray);">読み込み中...</div>';
+  document.getElementById('dayDetailOverlay').classList.add('open');
+  try{
+    var data=await sbFetch('/rest/v1/processing_records?record_date=eq.'+iso+'&order=recorded_at.asc');
+    if(!data.length){body.innerHTML='<div class="empty-state"><div class="emoji">&#128203;</div><p>この日の記録はありません</p></div>';return;}
+    var ids=data.map(r=>'"'+r.id+'"').join(',');
+    var items=await sbFetch('/rest/v1/processing_items?processing_record_id=in.('+ids+')');
+    data.forEach(r=>{r.items=items.filter(i=>i.processing_record_id===r.id);});
+    var tLabel={process:'加工',waste:'廃棄',inventory:'棚卸'};
+    var tBadge={process:'badge-process',waste:'badge-waste',inventory:'badge-inventory'};
+    var pa=data.filter(r=>r.record_type==='process').reduce((s,r)=>s+(r.total_amount||0),0);
+    var wa=data.filter(r=>r.record_type==='waste').reduce((s,r)=>s+(r.total_amount||0),0);
+    var amBar=pa>0?'<div class="today-amount-bar" style="margin-bottom:12px;"><div><div class="lbl">&#127800; 加工金額合計</div>'+(wa>0?'<div style="font-size:11px;color:var(--purple);">廃棄 '+fmtYen(wa)+'</div>':'')+'</div><div class="val">'+fmtYen(pa)+'</div></div>':'';
+    body.innerHTML=amBar+data.map(function(r){
+      var detail=r.record_type==='process'&&r.items.length?r.items.map(i=>i.destination_label+'：'+i.quantity+'束').join('　'):'';
+      return '<div class="record-card"><div class="record-card-top"><span class="type-badge '+tBadge[r.record_type]+'">'+tLabel[r.record_type]+'</span><span style="font-size:11px;color:var(--text-hint);">'+r.staff_name+'</span></div>'+
+        '<div class="record-product">'+r.product_name+'</div>'+
+        '<div class="record-total">合計 '+r.total_qty+'束</div>'+
+        (r.total_amount>0?'<div class="record-amount">'+fmtYen(r.total_amount)+'</div>':'')+
+        (detail?'<div class="record-detail">'+detail+'</div>':'')+
+        (r.memo?'<div class="record-detail">&#128221; '+r.memo+'</div>':'')+
+        '</div>';
+    }).join('');
+  }catch(e){body.innerHTML='<div class="empty-state"><div class="emoji">&#9888;&#65039;</div><p>読み込みに失敗しました</p></div>';}
+}
+function closeDayDetail(e){if(e===null||e.target===document.getElementById('dayDetailOverlay'))document.getElementById('dayDetailOverlay').classList.remove('open');}
+
+async function checkSupabase(){
+  try{await sbFetch('/rest/v1/processing_records?limit=1');document.getElementById('dbDot').classList.remove('err');document.getElementById('dbStatusText').textContent='DB接続済み';}
+  catch(e){document.getElementById('dbDot').classList.add('err');document.getElementById('dbStatusText').textContent='DB要確認';}
+}
+
+loadStaffList();
+</script>
+</body>
+</html>
