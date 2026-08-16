@@ -577,6 +577,7 @@ body{font-family:'Hiragino Sans','Noto Sans JP',sans-serif;background:var(--gray
     </div>
   </div>
   <div class="screen-body">
+    <div id="est-inventory-section"></div>
     <div id="history-list"></div>
     <div style="height:8px;"></div>
   </div>
@@ -990,6 +991,9 @@ const MASTER_PRODUCTS=[
 ];
 // 納品アプリ用フィルタ済みリスト
 const STANDARD_PRODUCTS=MASTER_PRODUCTS.filter(p=>p.use_delivery&&!p.season);
+// 推定在庫表示用：仏束花の全価格帯（季節品含む・450〜3,000円の6種）＋キープフラワー（棚卸対象の全定番品）
+const BUTSU_PRODUCTS=MASTER_PRODUCTS.filter(p=>p.id.startsWith('butsu'));
+const EST_INVENTORY_PRODUCTS=[...BUTSU_PRODUCTS,...MASTER_PRODUCTS.filter(p=>p.id.startsWith('keep'))];
 const EXTRA_PRESETS={
   butsu1500:{name:'仏束花 1,500円',price:1500,type:'season'},
   butsu2000:{name:'仏束花 2,000円',price:2000,type:'season'},
@@ -1804,6 +1808,7 @@ function switchHistMode(mode){
   const filterBar=document.getElementById('hist-filter-bar');
   filterBar.style.display=mode==='table'?'block':'none';
   renderHistory(allHistRecs,currentHistTab);
+  renderEstInventorySection();
 }
 
 function setHistFilter(type,val){
@@ -1830,6 +1835,7 @@ function setHistFilter(type,val){
     });
   }
   renderHistory(allHistRecs,currentHistTab);
+  renderEstInventorySection();
 }
 let editTargetRecord=null,editSelectedStore=null; // editSelectedStore: {company, store} 変更後の店舗
 let editQty={},editExtra=[],editSpotProducts2=[],editMarkdown=[];
@@ -1848,6 +1854,7 @@ function getWeekRange(offset){
 }
 async function showHistory(){
   histWeekOffset=0;show('screen-history');await loadHistWeek();
+  estInvCacheKey=null;estInvCacheData=null;renderEstInventorySection();
 }
 async function loadHistWeek(){
   const{from,to,label}=getWeekRange(histWeekOffset);
@@ -2059,6 +2066,230 @@ function renderHistoryCards(recs,tab){
   }else if(tab==='return'){
     sumEl.innerHTML=`<div class="card" style="text-align:center;margin-bottom:0;box-shadow:none;grid-column:span 2;"><div style="font-size:11px;color:var(--gray-400);margin-bottom:4px;">期間 返品点数合計</div><div style="font-size:22px;font-weight:700;color:var(--red);">${trq}<span style="font-size:13px;font-weight:400;">点</span></div></div>`;
   }else{sumEl.remove();}
+}
+
+// ===== 推定在庫（記録タブ） =====
+// 仏束花6価格帯（450〜3,000円）が対象。「今日の作業伝票」形式：
+//   推定在庫＝今日の開始時点の残数（前回確定日以降を積算） / 返品・納品＝本日分の実数 / 在庫(棚卸)＝本日棚卸を実施していればその実数（なければ「—」）
+// 在庫確定日（積算の起点）＝直近棚卸日 or 積算中に0以下になった日、のうち新しい方（今日より前の日付のみを対象に判定）。
+// 棚卸を記録したその日自体の納品・返品・売上は、その日の棚卸カウントに反映済みとみなし、翌日から積算する。
+let estInvCacheKey=null,estInvCacheData=null;
+
+function getEstTargetStores(){
+  if(histFilterStore!=='all'){
+    for(const co of COMPANIES){
+      const s=co.stores.find(s=>s.id===histFilterStore&&!s.closed);
+      if(s)return[{...s,companyName:co.name}];
+    }
+    return[];
+  }
+  if(histFilterCompany!=='all'){
+    const co=COMPANIES.find(c=>c.id===histFilterCompany);
+    return co?co.stores.filter(s=>!s.closed).map(s=>({...s,companyName:co.name})):[];
+  }
+  return[];
+}
+
+function formatMD(dateStr){
+  if(!dateStr)return'';
+  const[,m,d]=dateStr.split('-');
+  return`${parseInt(m)}/${parseInt(d)}`;
+}
+
+async function computeStoreToday(store){
+  const today=todayISO();
+  // 「今日より前」の直近棚卸を起点候補にする（今日すでに棚卸済みでも、今日の開始時点の推定には使わない）
+  const invRecs=await sbFetch(`/rest/v1/delivery_records?store_id=eq.${store.id}&record_type=eq.inventory&is_edited=eq.false&delivery_date=lt.${today}&order=delivery_date.desc&limit=1&select=delivery_date,delivery_items(product_name,quantity)`);
+  const baseline=invRecs&&invRecs[0];
+
+  // 本日分（返品・納品・棚卸・担当）は起点の有無によらず必要
+  const todayRecs=await sbFetch(`/rest/v1/delivery_records?store_id=eq.${store.id}&record_type=in.(delivery,return,inventory)&is_edited=eq.false&delivery_date=eq.${today}&select=record_type,staff_name,delivery_items(product_name,quantity)`);
+  const staff=(todayRecs.find(r=>r.staff_name)||{}).staff_name||'';
+  const todayDelivery={},todayReturn={},todayInventory={};
+  EST_INVENTORY_PRODUCTS.forEach(p=>{todayDelivery[p.id]=0;todayReturn[p.id]=0;todayInventory[p.id]=null;});
+  const casualMap={};
+  todayRecs.forEach(r=>{
+    (r.delivery_items||[]).forEach(i=>{
+      const p=EST_INVENTORY_PRODUCTS.find(bp=>bp.name===i.product_name);
+      if(p){
+        if(r.record_type==='delivery')todayDelivery[p.id]+=i.quantity;
+        else if(r.record_type==='return')todayReturn[p.id]+=i.quantity;
+        else if(r.record_type==='inventory')todayInventory[p.id]=(todayInventory[p.id]||0)+i.quantity;
+      }else if(r.record_type!=='inventory'){
+        if(!casualMap[i.product_name])casualMap[i.product_name]={name:i.product_name,delivery:0,return:0};
+        if(r.record_type==='delivery')casualMap[i.product_name].delivery+=i.quantity;
+        else casualMap[i.product_name].return+=i.quantity;
+      }
+    });
+  });
+  const casual=Object.values(casualMap).sort((a,b)=>a.name.localeCompare(b.name,'ja'));
+
+  if(!baseline){
+    const products=EST_INVENTORY_PRODUCTS.map(p=>({id:p.id,name:p.name,estimated:null,delivery:todayDelivery[p.id],return:todayReturn[p.id],inventory:todayInventory[p.id]}));
+    return{store,unknown:true,staff,products,casual};
+  }
+
+  const baseDate=baseline.delivery_date;
+  const baseQty={};
+  EST_INVENTORY_PRODUCTS.forEach(p=>baseQty[p.id]=0);
+  (baseline.delivery_items||[]).forEach(i=>{
+    const p=EST_INVENTORY_PRODUCTS.find(bp=>bp.name===i.product_name);
+    if(p)baseQty[p.id]=i.quantity;
+  });
+
+  // 起点翌日〜昨日 の納品・返品・売上を日別に集計し、今日の開始時点の推定在庫を積算する
+  const hasPast=baseDate<today; // 起点が今日より前かつ、間に少なくとも1日ある場合のみ問い合わせ
+  const yesterday=new Date(new Date(today+'T00:00:00').getTime()-86400000).toISOString().slice(0,10);
+  const delRecs=(hasPast&&baseDate<=yesterday)?await sbFetch(`/rest/v1/delivery_records?store_id=eq.${store.id}&record_type=in.(delivery,return)&is_edited=eq.false&delivery_date=gt.${baseDate}&delivery_date=lte.${yesterday}&select=delivery_date,record_type,delivery_items(product_name,quantity)`):[];
+  const salesRecs=(hasPast&&baseDate<=yesterday)?await sbFetch(`/rest/v1/sales_records?store_id=eq.${store.id}&is_closed=eq.false&is_edited=eq.false&sales_date=gt.${baseDate}&sales_date=lte.${yesterday}&select=sales_date,sales_items(product_name,quantity)`):[];
+
+  const byDate={};
+  function cellOf(date,pid){
+    if(!byDate[date])byDate[date]={};
+    if(!byDate[date][pid])byDate[date][pid]={delivery:0,return:0,sales:0};
+    return byDate[date][pid];
+  }
+  delRecs.forEach(r=>{
+    (r.delivery_items||[]).forEach(i=>{
+      const p=EST_INVENTORY_PRODUCTS.find(bp=>bp.name===i.product_name);
+      if(!p)return;
+      const c=cellOf(r.delivery_date,p.id);
+      if(r.record_type==='delivery')c.delivery+=i.quantity;else c.return+=i.quantity;
+    });
+  });
+  salesRecs.forEach(r=>{
+    (r.sales_items||[]).forEach(i=>{
+      const p=EST_INVENTORY_PRODUCTS.find(bp=>bp.name===i.product_name);
+      if(!p)return;
+      cellOf(r.sales_date,p.id).sales+=i.quantity;
+    });
+  });
+  const dates=Object.keys(byDate).sort();
+
+  const products=EST_INVENTORY_PRODUCTS.map(p=>{
+    let running=baseQty[p.id]||0;
+    dates.forEach(d=>{
+      const c=byDate[d][p.id];if(!c)return;
+      running+=c.delivery-c.return-c.sales;
+      if(running<=0)running=0; // 0以下になった日をその日から新たな起点として続行（合計値には反映済み）
+    });
+    return{id:p.id,name:p.name,estimated:running,delivery:todayDelivery[p.id],return:todayReturn[p.id],inventory:todayInventory[p.id]};
+  });
+
+  return{store,unknown:false,baseDate,staff,products,casual};
+}
+
+async function renderEstInventorySection(){
+  const el=document.getElementById('est-inventory-section');
+  if(!el)return;
+  const stores=getEstTargetStores();
+  const key=stores.map(s=>s.id).join(',');
+  if(!stores.length){
+    estInvCacheKey=null;estInvCacheData=null;
+    el.innerHTML=`<div class="card" style="background:var(--gray-50);box-shadow:none;border:1px dashed var(--gray-200);text-align:center;color:var(--gray-400);font-size:12px;padding:16px;margin-bottom:12px;">📊 会社・店舗を選択すると、その店舗の推定在庫（本日時点）を表示します</div>`;
+    return;
+  }
+  if(estInvCacheKey===key&&estInvCacheData){renderEstInventoryContent(estInvCacheData);return;}
+  el.innerHTML=`<div class="card" style="text-align:center;color:var(--gray-400);font-size:12px;box-shadow:none;margin-bottom:12px;">推定在庫を計算中...</div>`;
+  try{
+    const data=await Promise.all(stores.map(s=>computeStoreToday(s)));
+    estInvCacheKey=key;estInvCacheData=data;
+    renderEstInventoryContent(data);
+  }catch(e){
+    el.innerHTML=`<div class="card" style="text-align:center;color:var(--red);font-size:12px;box-shadow:none;margin-bottom:12px;">推定在庫の計算に失敗しました</div>`;
+  }
+}
+function refreshEstInventory(){estInvCacheKey=null;estInvCacheData=null;renderEstInventorySection();}
+
+function renderEstInventoryContent(data){
+  const el=document.getElementById('est-inventory-section');
+  if(!el)return;
+  el.innerHTML='';
+  const header=document.createElement('div');
+  header.style='display:flex;align-items:center;justify-content:space-between;margin:4px 2px 8px;';
+  header.innerHTML=`<div style="font-size:13px;font-weight:700;color:var(--gray-800);">📊 推定在庫（本日）</div><button onclick="refreshEstInventory()" style="border:none;background:none;color:var(--green);font-size:11px;font-weight:600;cursor:pointer;padding:4px 6px;">🔄 更新</button>`;
+  el.appendChild(header);
+  el.appendChild(currentHistMode==='table'?buildEstInventoryTable(data):buildEstInventoryCards(data));
+}
+
+function estStoreHeaderHtml(d){
+  const dt=new Date(todayISO()+'T00:00:00');
+  const dow=['日','月','火','水','木','金','土'][dt.getDay()];
+  return`<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+    <div style="font-size:12px;font-weight:700;color:var(--gray-800);">${d.store.companyName?d.store.companyName+' ・ ':''}${d.store.name}</div>
+    <div style="font-size:11px;color:var(--gray-400);">${dt.getMonth()+1}/${dt.getDate()}（${dow}）${d.staff?'・担当 '+d.staff:''}</div>
+  </div>`;
+}
+
+function buildEstInventoryTable(data){
+  const wrap=document.createElement('div');
+  data.forEach(d=>{
+    const box=document.createElement('div');
+    box.style='margin-bottom:10px;border:1px solid var(--gray-200);border-radius:10px;padding:10px;background:var(--white);';
+    let h=estStoreHeaderHtml(d);
+    if(d.unknown){
+      h+=`<div style="font-size:11px;color:var(--gray-400);margin-bottom:6px;">📋 棚卸未実施のため推定在庫は不明です（本日分の納品・返品のみ表示）</div>`;
+    }
+    h+=`<div style="overflow-x:auto;"><table style="width:100%;min-width:320px;border-collapse:collapse;font-size:11px;">
+      <thead><tr style="background:var(--gray-50);">
+        <th style="padding:4px 6px;text-align:left;border:1px solid var(--gray-200);color:var(--gray-500);"></th>
+        <th style="padding:4px 6px;border:1px solid var(--gray-200);color:var(--blue);">推定在庫</th>
+        <th style="padding:4px 6px;border:1px solid var(--gray-200);color:var(--red);">返品</th>
+        <th style="padding:4px 6px;border:1px solid var(--gray-200);color:var(--green);">納品</th>
+        <th style="padding:4px 6px;border:1px solid var(--gray-200);color:var(--gray-600);">在庫（棚卸）</th>
+      </tr></thead><tbody>`;
+    d.products.forEach(p=>{
+      h+=`<tr>
+        <td style="padding:4px 6px;border:1px solid var(--gray-200);font-weight:600;">${p.name.replace('仏束花 ','').replace('円','')}</td>
+        <td style="padding:4px 6px;text-align:center;border:1px solid var(--gray-200);font-weight:700;color:var(--blue);">${p.estimated===null?'不明':p.estimated}</td>
+        <td style="padding:4px 6px;text-align:center;border:1px solid var(--gray-200);color:var(--red);">${p.return}</td>
+        <td style="padding:4px 6px;text-align:center;border:1px solid var(--gray-200);color:var(--green);">${p.delivery}</td>
+        <td style="padding:4px 6px;text-align:center;border:1px solid var(--gray-200);color:var(--gray-600);">${p.inventory===null?'—':p.inventory}</td>
+      </tr>`;
+    });
+    h+=`</tbody></table></div>`;
+    if(d.casual.length){
+      h+=`<div style="font-size:10px;color:var(--gray-400);margin:8px 0 4px;">その他品目（本日分・推定在庫なし）</div>
+      <div style="overflow-x:auto;"><table style="width:100%;min-width:220px;border-collapse:collapse;font-size:11px;">`;
+      d.casual.forEach(c=>{
+        h+=`<tr><td style="padding:3px 6px;border:1px solid var(--gray-200);">${c.name}</td>
+            <td style="padding:3px 6px;text-align:center;border:1px solid var(--gray-200);color:var(--red);">返品${c.return}</td>
+            <td style="padding:3px 6px;text-align:center;border:1px solid var(--gray-200);color:var(--green);">納品${c.delivery}</td></tr>`;
+      });
+      h+=`</table></div>`;
+    }
+    box.innerHTML=h;
+    wrap.appendChild(box);
+  });
+  return wrap;
+}
+
+function buildEstInventoryCards(data){
+  const wrap=document.createElement('div');
+  data.forEach(d=>{
+    const card=document.createElement('div');card.className='history-item';
+    let h=estStoreHeaderHtml(d);
+    if(d.unknown){
+      h+=`<div style="font-size:12px;color:var(--gray-400);margin-bottom:6px;">📋 棚卸未実施のため推定在庫は不明です（本日分の納品・返品のみ表示）</div>`;
+    }
+    h+=d.products.map(p=>`<div style="font-size:12px;color:var(--gray-700);padding:4px 0;border-bottom:1px solid var(--gray-100);">
+      <span style="font-weight:600;">${p.name}</span><br>
+      <span style="color:var(--blue);font-weight:700;">推定在庫: ${p.estimated===null?'不明':p.estimated+'束'}</span>
+      <span style="color:var(--gray-300);"> / </span>
+      <span style="color:var(--red);">返品: ${p.return}</span>
+      <span style="color:var(--gray-300);"> / </span>
+      <span style="color:var(--green);">納品: ${p.delivery}</span>
+      <span style="color:var(--gray-300);"> / </span>
+      <span style="color:var(--gray-600);">在庫(棚卸): ${p.inventory===null?'—':p.inventory}</span>
+    </div>`).join('');
+    if(d.casual.length){
+      h+=`<div style="font-size:11px;color:var(--gray-400);margin-top:8px;">その他品目（本日分・推定在庫なし）</div>`;
+      h+=d.casual.map(c=>`<div style="font-size:12px;color:var(--gray-700);padding:2px 0;">${c.name}　<span style="color:var(--red);">返品:${c.return}</span> / <span style="color:var(--green);">納品:${c.delivery}</span></div>`).join('');
+    }
+    card.innerHTML=h;
+    wrap.appendChild(card);
+  });
+  return wrap;
 }
 
 // ===== 修正機能 =====
