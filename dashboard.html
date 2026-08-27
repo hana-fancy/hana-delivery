@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>経営ダッシュボード</title>
+<style>
+:root{
+  --green:#2d6a4f;--green-light:#40916c;--green-pale:#d8f3dc;--green-muted:#b7e4c7;
+  --amber:#e76f51;--amber-pale:#fde8e0;
+  --blue:#1a73e8;--blue-pale:#e8f0fe;
+  --purple:#6741d9;--purple-pale:#ede9fe;
+  --red:#c0392b;--red-pale:#fdecea;
+  --orange:#e67e22;--orange-pale:#fef0e7;
+  --gray-50:#f8f9fa;--gray-100:#f1f3f4;--gray-200:#e8eaed;
+  --gray-400:#9aa0a6;--gray-600:#5f6368;--gray-800:#3c4043;--gray-900:#202124;
+  --white:#fff;--shadow-sm:0 1px 3px rgba(0,0,0,.08);--radius:12px;--radius-sm:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Hiragino Sans','Noto Sans JP',sans-serif;background:var(--gray-100);color:var(--gray-900);padding:20px;}
+.header{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;flex-wrap:wrap;}
+.title{font-size:20px;font-weight:700;}
+.subtitle{font-size:12px;color:var(--gray-400);}
+.toolbar{display:flex;align-items:center;gap:12px;margin:16px 0;flex-wrap:wrap;}
+.toolbar label{font-size:13px;color:var(--gray-600);font-weight:600;}
+select,input[type=number]{font-family:inherit;font-size:13px;padding:6px 8px;border:1.5px solid var(--gray-200);border-radius:var(--radius-sm);background:var(--white);color:var(--gray-900);}
+input[type=number]:disabled{background:var(--gray-100);color:var(--gray-400);cursor:not-allowed;}
+.banner{background:var(--amber-pale);color:var(--amber);border-radius:var(--radius-sm);padding:10px 14px;font-size:12.5px;margin-bottom:14px;display:none;line-height:1.6;}
+.banner.show{display:block;}
+.settings-panel{background:var(--white);border-radius:var(--radius);padding:14px 18px;box-shadow:var(--shadow-sm);margin-bottom:16px;}
+.settings-title{font-size:12px;font-weight:700;color:var(--gray-600);margin-bottom:10px;}
+.settings-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.settings-row label{font-size:13px;font-weight:600;}
+.settings-note{font-size:11px;color:var(--gray-400);margin-top:8px;line-height:1.6;}
+.cards{display:flex;gap:12px;margin-bottom:8px;flex-wrap:wrap;}
+.card{background:var(--white);border-radius:var(--radius);padding:14px 18px;box-shadow:var(--shadow-sm);min-width:140px;}
+.card-label{font-size:11px;color:var(--gray-400);font-weight:600;margin-bottom:4px;}
+.card-value{font-size:22px;font-weight:700;color:var(--gray-900);}
+.card-value.mq{color:var(--green);}
+.card-value.neg{color:var(--red);}
+.card input[type=number]{font-size:22px;font-weight:700;color:var(--gray-900);border:none;padding:0;background:transparent;width:100%;}
+.card input[type=number]:focus{outline:1px solid var(--gray-200);}
+.summary-note{font-size:11px;color:var(--gray-400);margin-bottom:16px;}
+.table-title-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.reset-sort{font-size:12px;color:var(--blue);cursor:pointer;display:none;}
+.reset-sort.show{display:inline;}
+.table-wrap{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow-x:auto;}
+table{border-collapse:collapse;width:100%;min-width:1500px;font-size:12.5px;}
+th,td{padding:8px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--gray-100);}
+th:first-child,td:first-child{text-align:left;}
+thead th{background:var(--gray-50);color:var(--gray-600);font-weight:700;font-size:11.5px;position:sticky;top:0;cursor:default;user-select:none;}
+th.sortable{cursor:pointer;}
+th.sortable:hover{background:var(--gray-100);}
+th.sortable .arrow{font-size:9px;color:var(--gray-400);margin-left:2px;}
+tbody tr:hover{background:var(--gray-50);}
+tr.group-header td{background:var(--gray-800);color:var(--white);font-weight:700;font-size:12px;text-align:left;padding:6px 10px;}
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;}
+.badge.standard{background:var(--green-pale);color:var(--green);}
+.badge.season{background:var(--purple-pale);color:var(--purple);}
+.badge.casual{background:var(--blue-pale);color:var(--blue);}
+.badge.markdown{background:var(--red-pale);color:var(--red);}
+.badge.other{background:var(--gray-100);color:var(--gray-600);}
+.prodname{font-weight:600;color:var(--gray-900);}
+.unset{color:var(--gray-400);font-size:11px;}
+.override-tag{font-size:9px;color:var(--amber);font-weight:700;margin-left:3px;}
+.rate-input{width:56px;text-align:right;}
+.yen-input{width:70px;text-align:right;}
+.sim-input{width:56px;text-align:right;}
+.mq-value{font-weight:700;color:var(--green);}
+.mq-value.neg{color:var(--red);}
+.delta{font-size:11px;color:var(--gray-400);}
+.delta.pos{color:var(--green);}
+.delta.neg{color:var(--red);}
+.empty-msg{padding:40px;text-align:center;color:var(--gray-400);font-size:13px;}
+.sql-hint{margin-top:14px;font-size:11.5px;color:var(--gray-400);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title">経営ダッシュボード</div>
+  <div class="subtitle">v0.1 — スーパー卸 分析タブ</div>
+</div>
+
+<div class="toolbar">
+  <label for="period-select">期間</label>
+  <select id="period-select"></select>
+  <span id="period-range" style="font-size:12px;color:var(--gray-400);"></span>
+</div>
+
+<div class="banner" id="scenario-banner">
+  シナリオの保存先テーブル（dashboard_scenarios）が見つかりません。保存・呼び出しは使えず、常に白紙の状態で使う形になります。
+  Supabaseで下記SQLを実行すると使えるようになります。
+  <div class="sql-hint" id="scenario-sql-hint"></div>
+</div>
+
+<div class="settings-panel">
+  <div class="settings-title">シナリオ（白紙が既定。名前を付けて保存すると呼び出せます）</div>
+  <div class="settings-row">
+    <label for="scenario-select">呼び出す</label>
+    <select id="scenario-select"><option value="">（白紙）</option></select>
+    <button type="button" id="scenario-reset-btn">白紙に戻す</button>
+  </div>
+  <div class="settings-row" style="margin-top:8px;">
+    <label for="scenario-name-input">名前を付けて保存</label>
+    <input type="text" id="scenario-name-input" placeholder="例：Aさん案" style="width:160px;">
+    <button type="button" id="scenario-save-btn">保存</button>
+    <button type="button" id="scenario-delete-btn">選択中のシナリオを削除</button>
+  </div>
+  <div class="settings-note" id="scenario-message"></div>
+</div>
+
+<div class="settings-panel">
+  <div class="settings-title">基礎設定</div>
+  <div class="settings-row">
+    <label for="commission-rate-input">委託手数料率（全社一律・暫定）</label>
+    <input type="number" id="commission-rate-input" step="0.1" style="width:70px;text-align:right;">
+    <span>%</span>
+  </div>
+  <div class="settings-note">
+    実際は店舗により異なります（もんとあーる20%・主婦の店20%・アオキ18%・エスモール12%・パル16.5%・本店0%）。
+    店舗別の粗利検証は将来対応予定。現状は最も高い20%を基準にした保守的な一律値で、実際のMQはこれより高い場合があります。
+  </div>
+  <div class="settings-row" style="margin-top:10px;">
+    <label for="base-margin-rate-input">基本粗利率（全社一括・暫定）</label>
+    <input type="number" id="base-margin-rate-input" step="0.1" style="width:70px;text-align:right;">
+    <span>%</span>
+  </div>
+  <div class="settings-note">
+    表の各行で個別入力があればそちらを優先し、未入力の商品にはこの一括値を仮適用します。
+  </div>
+</div>
+
+<div class="cards">
+  <div class="card"><div class="card-label">合計 Q（点数）</div><div class="card-value" id="card-q">—</div></div>
+  <div class="card"><div class="card-label">合計 PQ（売上金額）</div><div class="card-value" id="card-pq">—</div></div>
+  <div class="card"><div class="card-label">合計 MQ（実績）</div><div class="card-value mq" id="card-mq">—</div></div>
+  <div class="card">
+    <div class="card-label">目標MQ</div>
+    <input type="number" id="target-mq-input" step="1000" placeholder="未設定">
+  </div>
+  <div class="card"><div class="card-label">達成率（実績÷目標）</div><div class="card-value" id="card-achievement">—</div></div>
+  <div class="card"><div class="card-label">MQ増分合計（シミュレーション）</div><div class="card-value" id="card-mq-delta">—</div></div>
+  <div class="card"><div class="card-label">推定合計MQ（シミュレーション後）</div><div class="card-value mq" id="card-mq-estimated">—</div></div>
+</div>
+<div class="summary-note" id="summary-note"></div>
+
+<div class="table-title-row">
+  <span class="reset-sort" id="reset-sort">▸ 既定の並び（商品区分・価格順）に戻す</span>
+</div>
+
+<div class="table-wrap">
+  <table id="main-table">
+    <thead>
+      <tr>
+        <th>商品名</th>
+        <th class="sortable" data-key="qty">Q<span class="arrow"></span></th>
+        <th>P（平均単価）</th>
+        <th class="sortable" data-key="pq">PQ<span class="arrow"></span></th>
+        <th>基本粗利率%</th>
+        <th>V1（原価）</th>
+        <th>実原価入力(円)</th>
+        <th>V2（委託手数料）</th>
+        <th>実V</th>
+        <th>M（粗利単価）</th>
+        <th class="sortable" data-key="mq">MQ<span class="arrow"></span></th>
+        <th>追加Q個</th>
+        <th>MQ増分(Qのみ)</th>
+        <th>追加V円</th>
+        <th>MQ増分(Vのみ)</th>
+        <th>MQ増分(合計)</th>
+      </tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+  </table>
+  <div class="empty-msg" id="empty-msg" style="display:none;"></div>
+</div>
+
+<script>
+const SUPABASE_URL='https://vvyzwwoduaqqamjvoqrp.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2eXp3d29kdWFxcWFtanZvcXJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk4MTk1MzMsImV4cCI6MjA5NTM5NTUzM30.aKE-ZUjXJ0j3iBMQP1GLpfwwzPWGJFglhJa0vB52Q-U';
+
+async function sbFetch(path,opts={}){
+  const isDelete=opts.method==='DELETE';
+  const defaultHeaders={
+    'apikey':SUPABASE_KEY,
+    'Authorization':'Bearer '+SUPABASE_KEY,
+  };
+  if(!isDelete){
+    defaultHeaders['Content-Type']='application/json';
+    defaultHeaders['Prefer']='return=representation';
+  }
+  const res=await fetch(SUPABASE_URL+path,{...opts,headers:{...defaultHeaders,...(opts.headers||{})}});
+  if(!res.ok)throw new Error(await res.text());
+  const txt=await res.text();return txt?JSON.parse(txt):[];
+}
+function todayISO(){const d=new Date();d.setTime(d.getTime()+9*60*60*1000);return d.toISOString().slice(0,10);}
+
+// ===== 物日マスタ =====
+// 日付は年ごとに実態と多少ずれ得るため、必要に応じてここを直接調整する。
+const KIRYUUBI_MASTER=[
+  {id:'obon2025',   name:'お盆2025',   start:'2025-08-06', end:'2025-08-15'},
+  {id:'obon2026',   name:'お盆2026',   start:'2026-08-06', end:'2026-08-15'},
+  {id:'higan_aki2026', name:'秋彼岸2026', start:'2026-09-19', end:'2026-09-25'},
+  {id:'higan_haru2026', name:'春彼岸2026', start:'2026-03-17', end:'2026-03-23'},
+  {id:'hahanohi2026', name:'母の日2026', start:'2026-05-04', end:'2026-05-10'},
+  {id:'shougatsu2025_26', name:'正月2025-26', start:'2025-12-29', end:'2026-01-03'},
+];
+
+// もんとあーるは既存アプリ側で税込金額を保存している（要修正・別途対応予定）。
+// この日付より前のもんとあーるデータは、集計時に÷1.10して税抜に補正する。
+const MONTOUR_TAX_FIX_DATE='2026-09-01';
+
+// ===== 表示順マスタ（商品区分の並び順・キープフラワーは定番の最後） =====
+const GROUP_ORDER=['standard_main','standard_keep','markdown','casual','season','other'];
+const GROUP_LABEL={
+  standard_main:'スタンダード品',
+  standard_keep:'キープフラワー',
+  markdown:'値下げ品',
+  casual:'カジュアル',
+  season:'季節品',
+  other:'その他',
+};
+const CATEGORY_BADGE_LABEL={standard:'スタンダード',season:'季節品',casual:'カジュアル',markdown:'値下げ品'};
+function isKeepFlower(name){return name.indexOf('キープフラワー')!==-1;}
+function groupKey(row){
+  if(row.category==='standard')return isKeepFlower(row.product_name)?'standard_keep':'standard_main';
+  if(row.category==='markdown')return 'markdown';
+  if(row.category==='casual')return 'casual';
+  if(row.category==='season')return 'season';
+  return 'other';
+}
+function categoryClass(cat){
+  if(cat==='standard')return 'standard';
+  if(cat==='season')return 'season';
+  if(cat==='casual')return 'casual';
+  if(cat==='markdown')return 'markdown';
+  return 'other';
+}
+
+// 開始日が最も新しい（=直近で始まった）期間を既定で選ぶ。まだどれも始まっていなければ先頭にフォールバック。
+function pickDefaultPeriod(){
+  const today=todayISO();
+  const started=KIRYUUBI_MASTER.filter(p=>p.start<=today);
+  if(started.length===0)return KIRYUUBI_MASTER[0];
+  return started.reduce((latest,p)=>p.start>latest.start?p:latest,started[0]);
+}
+let currentPeriod=pickDefaultPeriod();
+let aggRows=[];          // {product_name, category, qty, amount}
+let vSettings={};        // product_name -> {base_margin_rate, actual_v1}（シナリオの一部。既定は白紙）
+let simState={};         // product_name -> {extraQty, extraV}（シナリオの一部。既定は白紙）
+let targetMQ=null;       // 目標MQ（シナリオの一部。既定は白紙）
+let sortState={mode:'group'}; // {mode:'group'} or {mode:'metric', key, dir}
+let commissionRate=0.20; // 基礎設定（全社一律・暫定）、localStorageに保存
+let globalMarginRate=0.66; // 基礎設定（全社一括・暫定の基本粗利率）、localStorageに保存
+let scenarioList=[];     // 現在の期間に紐づくシナリオ一覧
+let scenariosAvailable=true;
+let currentScenarioId=null;
+
+function fmtYen(n){return n==null?'—':'¥'+Math.round(n).toLocaleString('ja-JP');}
+function fmtNum(n){return Math.round(n).toLocaleString('ja-JP');}
+
+function loadCommissionRate(){
+  const saved=localStorage.getItem('ff_dashboard_commission_rate');
+  if(saved!==null){const v=parseFloat(saved);if(!isNaN(v))commissionRate=v;}
+}
+function saveCommissionRate(){
+  localStorage.setItem('ff_dashboard_commission_rate',String(commissionRate));
+}
+function loadGlobalMarginRate(){
+  const saved=localStorage.getItem('ff_dashboard_base_margin_rate');
+  if(saved!==null){const v=parseFloat(saved);if(!isNaN(v))globalMarginRate=v;}
+}
+function saveGlobalMarginRate(){
+  localStorage.setItem('ff_dashboard_base_margin_rate',String(globalMarginRate));
+}
+function initSettingsPanel(){
+  loadCommissionRate();
+  const inp=document.getElementById('commission-rate-input');
+  inp.value=(commissionRate*100).toFixed(1);
+  inp.addEventListener('change',()=>{
+    const v=parseFloat(inp.value);
+    commissionRate=isNaN(v)?0:v/100;
+    saveCommissionRate();
+    renderTable();
+  });
+
+  loadGlobalMarginRate();
+  const marginInp=document.getElementById('base-margin-rate-input');
+  marginInp.value=(globalMarginRate*100).toFixed(1);
+  marginInp.addEventListener('change',()=>{
+    const v=parseFloat(marginInp.value);
+    globalMarginRate=isNaN(v)?0:v/100;
+    saveGlobalMarginRate();
+    renderTable();
+  });
+}
+
+function initPeriodSelect(){
+  const sel=document.getElementById('period-select');
+  KIRYUUBI_MASTER.forEach(p=>{
+    const opt=document.createElement('option');
+    opt.value=p.id;
+    opt.textContent=p.name;
+    sel.appendChild(opt);
+  });
+  sel.value=currentPeriod.id;
+  sel.addEventListener('change',()=>{
+    currentPeriod=KIRYUUBI_MASTER.find(p=>p.id===sel.value);
+    sortState={mode:'group'};
+    resetToBlank();
+    loadAndRender();
+  });
+}
+
+async function loadAggregates(start,end){
+  const rows=await sbFetch(`/rest/v1/sales_records?select=sales_date,company_id,sales_items(product_name,category,price,quantity,amount)&sales_date=gte.${start}&sales_date=lte.${end}`);
+  const map={};
+  rows.forEach(rec=>{
+    const needsTaxFix=rec.company_id==='montour'&&rec.sales_date<MONTOUR_TAX_FIX_DATE;
+    (rec.sales_items||[]).forEach(item=>{
+      const key=item.product_name;
+      if(!key)return;
+      let amount=item.amount||0;
+      const qty=item.quantity||0;
+      if(needsTaxFix)amount=amount/1.1;
+      if(!map[key])map[key]={product_name:key,category:item.category||'other',qty:0,amount:0};
+      map[key].qty+=qty;
+      map[key].amount+=amount;
+    });
+  });
+  return Object.values(map);
+}
+
+async function loadScenarioList(){
+  try{
+    scenarioList=await sbFetch(`/rest/v1/dashboard_scenarios?period_id=eq.${currentPeriod.id}&select=id,scenario_name,target_mq,data&order=scenario_name.asc`);
+    scenariosAvailable=true;
+  }catch(e){
+    scenarioList=[];
+    scenariosAvailable=false;
+  }
+  renderScenarioSelect();
+  toggleScenarioBanner();
+}
+
+function toggleScenarioBanner(){
+  const banner=document.getElementById('scenario-banner');
+  if(!scenariosAvailable){
+    banner.classList.add('show');
+    document.getElementById('scenario-sql-hint').textContent=
+      "CREATE TABLE dashboard_scenarios (id uuid primary key default gen_random_uuid(), period_id text not null, scenario_name text not null, target_mq integer, data jsonb not null default '{}'::jsonb, created_at timestamptz default now(), updated_at timestamptz default now(), unique(period_id, scenario_name)); ALTER TABLE dashboard_scenarios DISABLE ROW LEVEL SECURITY;";
+  }else{
+    banner.classList.remove('show');
+  }
+}
+
+function renderScenarioSelect(){
+  const sel=document.getElementById('scenario-select');
+  sel.innerHTML='';
+  const blank=document.createElement('option');
+  blank.value='';blank.textContent='（白紙）';
+  sel.appendChild(blank);
+  scenarioList.forEach(s=>{
+    const opt=document.createElement('option');
+    opt.value=s.id;opt.textContent=s.scenario_name;
+    sel.appendChild(opt);
+  });
+  sel.value=currentScenarioId||'';
+}
+
+function setScenarioMessage(msg){
+  document.getElementById('scenario-message').textContent=msg;
+}
+
+function resetToBlank(){
+  vSettings={};
+  simState={};
+  targetMQ=null;
+  currentScenarioId=null;
+  const targetInp=document.getElementById('target-mq-input');
+  if(targetInp)targetInp.value='';
+  const sel=document.getElementById('scenario-select');
+  if(sel)sel.value='';
+  const nameInp=document.getElementById('scenario-name-input');
+  if(nameInp)nameInp.value='';
+  setScenarioMessage('');
+  renderTable();
+}
+
+function applyScenario(id){
+  const s=scenarioList.find(x=>x.id===id);
+  if(!s)return;
+  vSettings={};
+  simState={};
+  const data=s.data||{};
+  Object.entries(data).forEach(([name,d])=>{
+    if(d.base_margin_rate>0||(d.actual_v1!=null&&d.actual_v1>0)){
+      vSettings[name]={base_margin_rate:d.base_margin_rate||0,actual_v1:d.actual_v1||null};
+    }
+    if(d.extraQty||d.extraV){
+      simState[name]={extraQty:d.extraQty||0,extraV:d.extraV||0};
+    }
+  });
+  targetMQ=s.target_mq!=null?s.target_mq:null;
+  currentScenarioId=s.id;
+  document.getElementById('target-mq-input').value=targetMQ!=null?targetMQ:'';
+  document.getElementById('scenario-name-input').value=s.scenario_name;
+  setScenarioMessage('');
+  renderTable();
+}
+
+async function saveScenario(){
+  const nameInp=document.getElementById('scenario-name-input');
+  const name=nameInp.value.trim();
+  if(!name){setScenarioMessage('シナリオ名を入力してください');return;}
+  if(!scenariosAvailable){setScenarioMessage('保存先テーブルが未作成のため保存できません');return;}
+  const data={};
+  aggRows.forEach(r=>{
+    const v=vSettings[r.product_name];
+    const s=simState[r.product_name];
+    const hasV=v&&(v.base_margin_rate>0||(v.actual_v1!=null&&v.actual_v1>0));
+    const hasSim=s&&(s.extraQty||s.extraV);
+    if(hasV||hasSim){
+      data[r.product_name]={
+        base_margin_rate:v?v.base_margin_rate||0:0,
+        actual_v1:v&&v.actual_v1!=null?v.actual_v1:null,
+        extraQty:s?s.extraQty||0:0,
+        extraV:s?s.extraV||0:0,
+      };
+    }
+  });
+  try{
+    const result=await sbFetch(`/rest/v1/dashboard_scenarios?on_conflict=period_id,scenario_name`,{
+      method:'POST',
+      headers:{'Prefer':'resolution=merge-duplicates,return=representation'},
+      body:JSON.stringify([{period_id:currentPeriod.id,scenario_name:name,target_mq:targetMQ,data,updated_at:new Date().toISOString()}])
+    });
+    if(result&&result[0])currentScenarioId=result[0].id;
+    await loadScenarioList();
+    setScenarioMessage(`「${name}」として保存しました`);
+  }catch(e){
+    setScenarioMessage('保存に失敗しました');
+    console.warn(e);
+  }
+}
+
+async function deleteCurrentScenario(){
+  const sel=document.getElementById('scenario-select');
+  const id=sel.value;
+  if(!id){setScenarioMessage('削除するシナリオを選択してください');return;}
+  const s=scenarioList.find(x=>x.id===id);
+  if(!s)return;
+  if(!confirm(`シナリオ「${s.scenario_name}」を削除します。よろしいですか？`))return;
+  try{
+    await sbFetch(`/rest/v1/dashboard_scenarios?id=eq.${id}`,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+    resetToBlank();
+    await loadScenarioList();
+    setScenarioMessage('削除しました');
+  }catch(e){
+    setScenarioMessage('削除に失敗しました');
+  }
+}
+
+function initScenarioPanel(){
+  document.getElementById('scenario-select').addEventListener('change',e=>{
+    const id=e.target.value;
+    if(!id){resetToBlank();}else{applyScenario(id);}
+  });
+  document.getElementById('scenario-reset-btn').addEventListener('click',resetToBlank);
+  document.getElementById('scenario-save-btn').addEventListener('click',saveScenario);
+  document.getElementById('scenario-delete-btn').addEventListener('click',deleteCurrentScenario);
+  document.getElementById('target-mq-input').addEventListener('change',e=>{
+    const v=parseFloat(e.target.value);
+    targetMQ=isNaN(v)?null:v;
+    renderTable();
+  });
+}
+
+function computeRow(agg){
+  const v=vSettings[agg.product_name]||{};
+  const qty=agg.qty,pq=agg.amount;
+  const p=qty>0?pq/qty:0;
+  const productMarginRate=v.base_margin_rate||0;
+  const marginIsOverride=productMarginRate>0;
+  const effectiveMarginRate=marginIsOverride?productMarginRate:globalMarginRate;
+  const marginSet=effectiveMarginRate>0;
+  const calcV1=p*(1-effectiveMarginRate);
+  const hasOverride=v.actual_v1!=null&&v.actual_v1>0;
+  const v1=hasOverride?v.actual_v1:calcV1;
+  const v2=p*commissionRate;
+  const actualV=v1+v2;
+  const known=marginSet||hasOverride;
+  const m=known?p-actualV:null;
+  const mq=known?m*qty:null;
+  return {...agg,p,pq,baseMarginRate:effectiveMarginRate,productMarginRate,marginIsOverride,marginSet,hasOverride,v1,v2,actualV,m,mq};
+}
+
+function prepareRows(computed){
+  if(sortState.mode==='group'){
+    const withGroup=computed.map(r=>({...r,_group:groupKey(r)}));
+    withGroup.sort((a,b)=>{
+      const gi=GROUP_ORDER.indexOf(a._group)-GROUP_ORDER.indexOf(b._group);
+      if(gi!==0)return gi;
+      return a.p-b.p;
+    });
+    return withGroup;
+  }
+  const key=sortState.key,dir=sortState.dir;
+  const valueOf=r=>r[key]==null?-Infinity:r[key];
+  return [...computed].sort((a,b)=>(valueOf(a)-valueOf(b))*(dir==='desc'?-1:1));
+}
+
+function updateSortArrows(){
+  document.querySelectorAll('th.sortable').forEach(th=>{
+    const arrow=th.querySelector('.arrow');
+    if(sortState.mode==='metric'&&th.dataset.key===sortState.key){
+      arrow.textContent=sortState.dir==='desc'?'▼':'▲';
+    }else{
+      arrow.textContent='';
+    }
+  });
+  document.getElementById('reset-sort').classList.toggle('show',sortState.mode==='metric');
+}
+
+function computeSimDelta(row){
+  if(row.mq==null)return {qOnly:null,vOnly:null,total:null};
+  const state=simState[row.product_name]||{extraQty:0,extraV:0};
+  const dQ=state.extraQty||0,dV=state.extraV||0;
+  const qOnly=dQ*(row.p-row.actualV);
+  const vOnly=-dV*row.qty;
+  const newMQ=(row.p-(row.actualV+dV))*(row.qty+dQ);
+  const total=newMQ-row.mq;
+  return {qOnly,vOnly,total};
+}
+
+function renderSummary(rows){
+  const totalQ=rows.reduce((s,r)=>s+r.qty,0);
+  const totalPQ=rows.reduce((s,r)=>s+r.pq,0);
+  const known=rows.filter(r=>r.mq!=null);
+  const totalMQ=known.reduce((s,r)=>s+r.mq,0);
+  const unknownCount=rows.length-known.length;
+  const mqDeltaTotal=rows.reduce((s,r)=>s+(computeSimDelta(r).total||0),0);
+  const estimatedMQ=totalMQ+mqDeltaTotal;
+
+  document.getElementById('card-q').textContent=fmtNum(totalQ)+' 束';
+  document.getElementById('card-pq').textContent=fmtYen(totalPQ);
+  document.getElementById('card-mq').textContent=fmtYen(totalMQ);
+  document.getElementById('card-mq-delta').textContent=(mqDeltaTotal>=0?'+':'')+fmtYen(mqDeltaTotal);
+  const estEl=document.getElementById('card-mq-estimated');
+  estEl.textContent=fmtYen(estimatedMQ);
+
+  const achEl=document.getElementById('card-achievement');
+  if(targetMQ!=null&&targetMQ>0){
+    achEl.textContent=(totalMQ/targetMQ*100).toFixed(1)+'%';
+    estEl.className='card-value '+(estimatedMQ>=targetMQ?'mq':'neg');
+  }else{
+    achEl.textContent='—';
+    estEl.className='card-value mq';
+  }
+
+  const note=document.getElementById('summary-note');
+  note.textContent=unknownCount>0?`※基本粗利率・実原価が未設定の商品（${unknownCount}件）はMQ合計に含まれていません。`:'';
+}
+
+function makeNumberInput(value,className,step,onCommit){
+  const inp=document.createElement('input');
+  inp.type='number';
+  inp.className=className;
+  inp.value=value;
+  inp.step=step;
+  inp.addEventListener('change',()=>onCommit(parseFloat(inp.value)||0));
+  return inp;
+}
+
+function refreshSummary(){
+  renderSummary(aggRows.map(computeRow));
+}
+
+function renderTable(){
+  const computed=aggRows.map(computeRow);
+  const rows=prepareRows(computed);
+  renderSummary(computed);
+
+  const tbody=document.getElementById('table-body');
+  tbody.innerHTML='';
+  const emptyMsg=document.getElementById('empty-msg');
+  if(rows.length===0){
+    emptyMsg.style.display='block';
+    emptyMsg.textContent=`${currentPeriod.name}（${currentPeriod.start}〜${currentPeriod.end}）のデータがありません。`;
+    document.getElementById('main-table').style.display='none';
+    return;
+  }
+  emptyMsg.style.display='none';
+  document.getElementById('main-table').style.display='table';
+
+  let lastGroup=null;
+  rows.forEach(row=>{
+    if(sortState.mode==='group'&&row._group!==lastGroup){
+      lastGroup=row._group;
+      const trHead=document.createElement('tr');
+      trHead.className='group-header';
+      const td=document.createElement('td');
+      td.colSpan=16;
+      td.textContent=GROUP_LABEL[lastGroup];
+      trHead.appendChild(td);
+      tbody.appendChild(trHead);
+    }
+
+    const tr=document.createElement('tr');
+
+    const tdName=document.createElement('td');
+    const nameSpan=document.createElement('div');
+    nameSpan.className='prodname';
+    nameSpan.textContent=row.product_name;
+    const badge=document.createElement('span');
+    badge.className='badge '+categoryClass(row.category);
+    badge.textContent=CATEGORY_BADGE_LABEL[row.category]||'その他';
+    tdName.appendChild(nameSpan);
+    tdName.appendChild(badge);
+    tr.appendChild(tdName);
+
+    const tdQty=document.createElement('td');tdQty.textContent=fmtNum(row.qty);tr.appendChild(tdQty);
+    const tdP=document.createElement('td');tdP.textContent=fmtYen(row.p);tr.appendChild(tdP);
+    const tdPQ=document.createElement('td');tdPQ.textContent=fmtYen(row.pq);tr.appendChild(tdPQ);
+
+    const tdBaseMargin=document.createElement('td');
+    const marginInput=makeNumberInput(row.marginIsOverride?(row.productMarginRate*100).toFixed(1):'','rate-input',0.1,val=>{
+      const rate=val/100;
+      vSettings[row.product_name]={...(vSettings[row.product_name]||{}),base_margin_rate:rate};
+      renderTable();
+    });
+    marginInput.placeholder=(globalMarginRate*100).toFixed(1);
+    if(row.hasOverride){
+      marginInput.disabled=true;
+      marginInput.title='実原価入力が優先されているため、基本粗利率はV1の計算に使われません';
+    }
+    tdBaseMargin.appendChild(marginInput);
+    tr.appendChild(tdBaseMargin);
+
+    const tdV1=document.createElement('td');
+    tdV1.textContent=fmtYen(row.v1);
+    if(row.hasOverride){const tag=document.createElement('span');tag.className='override-tag';tag.textContent='実';tdV1.appendChild(tag);}
+    else if(!row.marginIsOverride&&row.marginSet){const tag=document.createElement('span');tag.className='override-tag';tag.style.color='var(--gray-400)';tag.textContent='既定';tdV1.appendChild(tag);}
+    if(!row.marginSet&&!row.hasOverride){tdV1.innerHTML='<span class="unset">未設定</span>';}
+    tr.appendChild(tdV1);
+
+    const tdActualV1=document.createElement('td');
+    tdActualV1.appendChild(makeNumberInput(row.hasOverride?row.v1:'','yen-input',1,val=>{
+      vSettings[row.product_name]={...(vSettings[row.product_name]||{}),actual_v1:val};
+      renderTable();
+    }));
+    tr.appendChild(tdActualV1);
+
+    const tdV2=document.createElement('td');tdV2.textContent=fmtYen(row.v2);tr.appendChild(tdV2);
+    const tdActualV=document.createElement('td');tdActualV.textContent=fmtYen(row.actualV);tr.appendChild(tdActualV);
+    const tdM=document.createElement('td');tdM.textContent=fmtYen(row.m);tr.appendChild(tdM);
+
+    const tdMQ=document.createElement('td');
+    tdMQ.textContent=fmtYen(row.mq);
+    tdMQ.className=row.mq!=null&&row.mq<0?'mq-value neg':'mq-value';
+    tr.appendChild(tdMQ);
+
+    // シミュレーション：追加Q個 / 追加V円 → Qのみ・Vのみ・合計のMQ増分
+    const state=simState[row.product_name]||{extraQty:0,extraV:0};
+    simState[row.product_name]=state;
+
+    const tdExtraQty=document.createElement('td');
+    tdExtraQty.appendChild(makeNumberInput(state.extraQty,'sim-input',1,val=>{state.extraQty=val;renderDelta();refreshSummary();}));
+    tr.appendChild(tdExtraQty);
+
+    const tdQOnly=document.createElement('td');
+    const qOnlySpan=document.createElement('span');qOnlySpan.className='delta';tdQOnly.appendChild(qOnlySpan);
+    tr.appendChild(tdQOnly);
+
+    const tdExtraV=document.createElement('td');
+    tdExtraV.appendChild(makeNumberInput(state.extraV,'sim-input',1,val=>{state.extraV=val;renderDelta();refreshSummary();}));
+    tr.appendChild(tdExtraV);
+
+    const tdVOnly=document.createElement('td');
+    const vOnlySpan=document.createElement('span');vOnlySpan.className='delta';tdVOnly.appendChild(vOnlySpan);
+    tr.appendChild(tdVOnly);
+
+    const tdTotal=document.createElement('td');
+    const totalSpan=document.createElement('span');totalSpan.className='delta';tdTotal.appendChild(totalSpan);
+    tr.appendChild(tdTotal);
+
+    function setDelta(span,val){
+      if(val==null){span.textContent='—';span.className='delta';return;}
+      span.textContent=(val>=0?'+':'')+fmtYen(val);
+      span.className='delta '+(val>0?'pos':val<0?'neg':'');
+    }
+    function renderDelta(){
+      const d=computeSimDelta(row);
+      setDelta(qOnlySpan,d.qOnly);
+      setDelta(vOnlySpan,d.vOnly);
+      setDelta(totalSpan,d.total);
+    }
+    renderDelta();
+
+    tbody.appendChild(tr);
+  });
+
+  updateSortArrows();
+}
+
+function initSortHeaders(){
+  document.querySelectorAll('th.sortable').forEach(th=>{
+    th.addEventListener('click',()=>{
+      const key=th.dataset.key;
+      if(sortState.mode==='metric'&&sortState.key===key){
+        sortState.dir=sortState.dir==='desc'?'asc':'desc';
+      }else{
+        sortState={mode:'metric',key,dir:'desc'};
+      }
+      renderTable();
+    });
+  });
+  document.getElementById('reset-sort').addEventListener('click',()=>{
+    sortState={mode:'group'};
+    renderTable();
+  });
+}
+
+async function loadAndRender(){
+  document.getElementById('period-range').textContent=`${currentPeriod.start} 〜 ${currentPeriod.end}`;
+  aggRows=await loadAggregates(currentPeriod.start,currentPeriod.end);
+  await loadScenarioList();
+  renderTable();
+}
+
+initSettingsPanel();
+initPeriodSelect();
+initSortHeaders();
+initScenarioPanel();
+loadAndRender();
+</script>
+</body>
+</html>
