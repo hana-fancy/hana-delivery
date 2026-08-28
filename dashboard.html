@@ -41,19 +41,28 @@ input[type=number]:disabled{background:var(--gray-100);color:var(--gray-400);cur
 .card input[type=number]{font-size:22px;font-weight:700;color:var(--gray-900);border:none;padding:0;background:transparent;width:100%;}
 .card input[type=number]:focus{outline:1px solid var(--gray-200);}
 .summary-note{font-size:11px;color:var(--gray-400);margin-bottom:16px;}
-.table-title-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.sim-badge{display:none;background:var(--orange-pale);color:var(--orange);border-radius:var(--radius-sm);padding:6px 12px;font-size:12px;font-weight:700;margin-bottom:12px;line-height:1.5;}
+.sim-badge.show{display:inline-block;}
+.card-sub{font-size:11px;color:var(--gray-400);font-weight:600;margin-top:3px;}
+.table-title-row{display:flex;align-items:center;gap:16px;margin-bottom:8px;flex-wrap:wrap;}
 .reset-sort{font-size:12px;color:var(--blue);cursor:pointer;display:none;}
 .reset-sort.show{display:inline;}
+.col-toggle{font-size:12px;color:var(--gray-600);cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:5px;}
 .table-wrap{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow-x:auto;}
-table{border-collapse:collapse;width:100%;min-width:1500px;font-size:12.5px;}
+table{border-collapse:collapse;width:100%;min-width:1150px;font-size:12.5px;}
+#main-table:not(.lean){min-width:1720px;}
+#main-table.lean .detail-col{display:none;}
 th,td{padding:8px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--gray-100);}
-th:first-child,td:first-child{text-align:left;}
-thead th{background:var(--gray-50);color:var(--gray-600);font-weight:700;font-size:11.5px;position:sticky;top:0;cursor:default;user-select:none;}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;z-index:1;}
+tbody td:first-child{background:var(--white);box-shadow:1px 0 0 var(--gray-100);}
+tbody tr:hover td:first-child{background:var(--gray-50);}
+thead th{background:var(--gray-50);color:var(--gray-600);font-weight:700;font-size:11.5px;position:sticky;top:0;z-index:2;cursor:default;user-select:none;}
+thead th:first-child{z-index:3;box-shadow:1px 0 0 var(--gray-200);}
 th.sortable{cursor:pointer;}
 th.sortable:hover{background:var(--gray-100);}
 th.sortable .arrow{font-size:9px;color:var(--gray-400);margin-left:2px;}
 tbody tr:hover{background:var(--gray-50);}
-tr.group-header td{background:var(--gray-800);color:var(--white);font-weight:700;font-size:12px;text-align:left;padding:6px 10px;}
+tr.group-header td{background:var(--gray-800);color:var(--white);font-weight:700;font-size:12px;text-align:left;padding:6px 10px;position:static;box-shadow:none;}
 .badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;}
 .badge.standard{background:var(--green-pale);color:var(--green);}
 .badge.season{background:var(--purple-pale);color:var(--purple);}
@@ -65,7 +74,7 @@ tr.group-header td{background:var(--gray-800);color:var(--white);font-weight:700
 .override-tag{font-size:9px;color:var(--amber);font-weight:700;margin-left:3px;}
 .rate-input{width:56px;text-align:right;}
 .yen-input{width:70px;text-align:right;}
-.sim-input{width:56px;text-align:right;}
+.sim-input{width:72px;text-align:right;}
 .mq-value{font-weight:700;color:var(--green);}
 .mq-value.neg{color:var(--red);}
 .delta{font-size:11px;color:var(--gray-400);}
@@ -73,6 +82,21 @@ tr.group-header td{background:var(--gray-800);color:var(--white);font-weight:700
 .delta.neg{color:var(--red);}
 .empty-msg{padding:40px;text-align:center;color:var(--gray-400);font-size:13px;}
 .sql-hint{margin-top:14px;font-size:11.5px;color:var(--gray-400);}
+
+@media print{
+  body{padding:0;background:#fff;}
+  .toolbar,#scenario-panel,.banner,.col-toggle,.reset-sort{display:none!important;}
+  .settings-panel{box-shadow:none;border:1px solid var(--gray-200);}
+  .cards{gap:6px;}
+  .card{box-shadow:none;border:1px solid var(--gray-200);min-width:0;padding:8px 10px;}
+  .table-wrap{overflow:visible;box-shadow:none;}
+  table,#main-table:not(.lean){min-width:0;font-size:9px;}
+  th,td{padding:3px 4px;position:static!important;box-shadow:none!important;}
+  input{border:none!important;background:transparent!important;-webkit-appearance:none;appearance:none;padding:0!important;width:auto!important;font-size:9px!important;color:var(--gray-900)!important;}
+  input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{display:none!important;}
+  .sim-badge.show{display:block;border:1px solid var(--orange);}
+  @page{margin:10mm;}
+}
 </style>
 </head>
 <body>
@@ -94,7 +118,7 @@ tr.group-header td{background:var(--gray-800);color:var(--white);font-weight:700
   <div class="sql-hint" id="scenario-sql-hint"></div>
 </div>
 
-<div class="settings-panel">
+<div class="settings-panel" id="scenario-panel">
   <div class="settings-title">シナリオ（白紙が既定。名前を付けて保存すると呼び出せます）</div>
   <div class="settings-row">
     <label for="scenario-select">呼び出す</label>
@@ -141,34 +165,38 @@ tr.group-header td{background:var(--gray-800);color:var(--white);font-weight:700
   </div>
   <div class="card"><div class="card-label">達成率（実績÷目標）</div><div class="card-value" id="card-achievement">—</div></div>
   <div class="card"><div class="card-label">MQ増分合計（シミュレーション）</div><div class="card-value" id="card-mq-delta">—</div></div>
-  <div class="card"><div class="card-label">推定合計MQ（シミュレーション後）</div><div class="card-value mq" id="card-mq-estimated">—</div></div>
+  <div class="card"><div class="card-label">推定合計MQ（シミュレーション後）</div><div class="card-value mq" id="card-mq-estimated">—</div><div class="card-sub" id="card-mq-estimated-sub"></div></div>
 </div>
+<div class="sim-badge" id="sim-badge">シミュレーション反映中 — 行の上書き入力（実価格・実原価・基本粗利率）や追加Q・V増減が「合計PQ」「合計MQ（実績）」にも反映されています</div>
 <div class="summary-note" id="summary-note"></div>
 
 <div class="table-title-row">
+  <label class="col-toggle"><input type="checkbox" id="detail-toggle"> 詳細列（V内訳・増分内訳）を表示</label>
   <span class="reset-sort" id="reset-sort">▸ 既定の並び（商品区分・価格順）に戻す</span>
 </div>
 
 <div class="table-wrap">
-  <table id="main-table">
+  <table id="main-table" class="lean">
     <thead>
       <tr>
         <th>商品名</th>
         <th class="sortable" data-key="qty">Q<span class="arrow"></span></th>
-        <th>P（平均単価）</th>
+        <th class="sortable" data-key="p">P（平均単価）<span class="arrow"></span></th>
+        <th>実価格入力(円)</th>
         <th class="sortable" data-key="pq">PQ<span class="arrow"></span></th>
         <th>基本粗利率%</th>
-        <th>V1（原価）</th>
+        <th class="detail-col">V1（原価）</th>
         <th>実原価入力(円)</th>
-        <th>V2（委託手数料）</th>
-        <th>実V</th>
-        <th>M（粗利単価）</th>
+        <th class="detail-col">V2（委託手数料）</th>
+        <th class="detail-col">実V</th>
+        <th class="sortable" data-key="m">M（粗利単価）<span class="arrow"></span></th>
         <th class="sortable" data-key="mq">MQ<span class="arrow"></span></th>
-        <th>追加Q個</th>
-        <th>MQ増分(Qのみ)</th>
-        <th>追加V円</th>
-        <th>MQ増分(Vのみ)</th>
-        <th>MQ増分(合計)</th>
+        <th title="販売数を何束増やすかの仮定">追加Q（束）</th>
+        <th class="detail-col" title="追加Qだけによる限界利益の増分">MQ影響(Q)</th>
+        <th title="1束あたりの変動費（花材原価）の増減。＋入力でコスト増→MQ減。既存Q・追加Qの両方に適用">V増減／束</th>
+        <th class="detail-col" title="V増減だけによる限界利益の変化">MQ影響(V)</th>
+        <th title="追加Q・V増減・単価変更をすべて反映した増分">MQ増分(計)</th>
+        <th class="sortable" data-key="estMQ" title="追加Q・V増減・単価変更をすべて反映した後のこの商品のMQ">施策後MQ<span class="arrow"></span></th>
       </tr>
     </thead>
     <tbody id="table-body"></tbody>
@@ -212,7 +240,8 @@ const KIRYUUBI_MASTER=[
 const MONTOUR_TAX_FIX_DATE='2026-09-01';
 
 // ===== 表示順マスタ（商品区分の並び順・キープフラワーは定番の最後） =====
-const GROUP_ORDER=['standard_main','standard_keep','markdown','casual','season','other'];
+// 既定の並び：仏束花（価格昇順）→ 季節品（仏束花1500/2000/3000）→ 値下げ品 → カジュアル → その他 → キープフラワー（最後）
+const GROUP_ORDER=['standard_main','season','markdown','casual','other','standard_keep'];
 const GROUP_LABEL={
   standard_main:'スタンダード品',
   standard_keep:'キープフラワー',
@@ -256,10 +285,12 @@ let globalMarginRate=0.66; // 基礎設定（全社一括・暫定の基本粗�
 let scenarioList=[];     // 現在の期間に紐づくシナリオ一覧
 let scenariosAvailable=true;
 let currentScenarioId=null;
+let pendingTab=null;     // 表内の入力欄でTab/Enterを押した直後の再フォーカス先ヒント {dir,key,ts}
 
 function fmtYen(n){return n==null?'—':'¥'+Math.round(n).toLocaleString('ja-JP');}
 function fmtNum(n){return Math.round(n).toLocaleString('ja-JP');}
 
+// 基礎設定はSupabase（dashboard_settings）で全スタッフ共通。localStorageはオフライン表示用のキャッシュとして併記。
 function loadCommissionRate(){
   const saved=localStorage.getItem('ff_dashboard_commission_rate');
   if(saved!==null){const v=parseFloat(saved);if(!isNaN(v))commissionRate=v;}
@@ -274,6 +305,30 @@ function loadGlobalMarginRate(){
 function saveGlobalMarginRate(){
   localStorage.setItem('ff_dashboard_base_margin_rate',String(globalMarginRate));
 }
+async function loadSettingsFromDB(){
+  try{
+    const rows=await sbFetch('/rest/v1/dashboard_settings?select=key,value');
+    rows.forEach(r=>{
+      const v=parseFloat(r.value);if(isNaN(v))return;
+      if(r.key==='commission_rate')commissionRate=v;
+      if(r.key==='base_margin_rate')globalMarginRate=v;
+    });
+    saveCommissionRate();saveGlobalMarginRate();
+  }catch(e){
+    console.warn('基礎設定のDB読み込みに失敗。localStorage/既定値を使用します',e);
+  }
+  const ci=document.getElementById('commission-rate-input');
+  const mi=document.getElementById('base-margin-rate-input');
+  if(ci)ci.value=(commissionRate*100).toFixed(1);
+  if(mi)mi.value=(globalMarginRate*100).toFixed(1);
+}
+function saveSettingToDB(key,value){
+  sbFetch('/rest/v1/dashboard_settings?on_conflict=key',{
+    method:'POST',
+    headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},
+    body:JSON.stringify([{key,value,updated_at:new Date().toISOString()}])
+  }).catch(e=>console.warn('基礎設定のDB保存に失敗',e));
+}
 function initSettingsPanel(){
   loadCommissionRate();
   const inp=document.getElementById('commission-rate-input');
@@ -282,6 +337,7 @@ function initSettingsPanel(){
     const v=parseFloat(inp.value);
     commissionRate=isNaN(v)?0:v/100;
     saveCommissionRate();
+    saveSettingToDB('commission_rate',commissionRate);
     renderTable();
   });
 
@@ -292,8 +348,23 @@ function initSettingsPanel(){
     const v=parseFloat(marginInp.value);
     globalMarginRate=isNaN(v)?0:v/100;
     saveGlobalMarginRate();
+    saveSettingToDB('base_margin_rate',globalMarginRate);
     renderTable();
   });
+}
+
+function initColToggle(){
+  const cb=document.getElementById('detail-toggle');
+  const tbl=document.getElementById('main-table');
+  cb.checked=false;
+  tbl.classList.add('lean');
+  cb.addEventListener('change',()=>tbl.classList.toggle('lean',!cb.checked));
+}
+
+function simIsActive(){
+  const vAny=Object.values(vSettings).some(v=>v&&((v.base_margin_rate||0)>0||(v.actual_v1!=null&&v.actual_v1>0)||(v.actual_price!=null&&v.actual_price>0)));
+  const sAny=Object.values(simState).some(s=>s&&((s.extraQty||0)!==0||(s.extraV||0)!==0));
+  return vAny||sAny;
 }
 
 function initPeriodSelect(){
@@ -395,8 +466,8 @@ function applyScenario(id){
   simState={};
   const data=s.data||{};
   Object.entries(data).forEach(([name,d])=>{
-    if(d.base_margin_rate>0||(d.actual_v1!=null&&d.actual_v1>0)){
-      vSettings[name]={base_margin_rate:d.base_margin_rate||0,actual_v1:d.actual_v1||null};
+    if(d.base_margin_rate>0||(d.actual_v1!=null&&d.actual_v1>0)||(d.actual_price!=null&&d.actual_price>0)){
+      vSettings[name]={base_margin_rate:d.base_margin_rate||0,actual_v1:d.actual_v1||null,actual_price:d.actual_price||null};
     }
     if(d.extraQty||d.extraV){
       simState[name]={extraQty:d.extraQty||0,extraV:d.extraV||0};
@@ -419,12 +490,13 @@ async function saveScenario(){
   aggRows.forEach(r=>{
     const v=vSettings[r.product_name];
     const s=simState[r.product_name];
-    const hasV=v&&(v.base_margin_rate>0||(v.actual_v1!=null&&v.actual_v1>0));
+    const hasV=v&&(v.base_margin_rate>0||(v.actual_v1!=null&&v.actual_v1>0)||(v.actual_price!=null&&v.actual_price>0));
     const hasSim=s&&(s.extraQty||s.extraV);
     if(hasV||hasSim){
       data[r.product_name]={
         base_margin_rate:v?v.base_margin_rate||0:0,
         actual_v1:v&&v.actual_v1!=null?v.actual_v1:null,
+        actual_price:v&&v.actual_price!=null?v.actual_price:null,
         extraQty:s?s.extraQty||0:0,
         extraV:s?s.extraV||0:0,
       };
@@ -479,21 +551,26 @@ function initScenarioPanel(){
 
 function computeRow(agg){
   const v=vSettings[agg.product_name]||{};
-  const qty=agg.qty,pq=agg.amount;
-  const p=qty>0?pq/qty:0;
+  const qty=agg.qty;
+  const pActual=qty>0?agg.amount/qty:0;               // 実績の平均単価（売上実額ベース）
+  const priceHasOverride=v.actual_price!=null&&v.actual_price>0;
+  const p=priceHasOverride?v.actual_price:pActual;    // 実効単価（以降の計算で使う）
+  const pq=p*qty;                                     // 単価上書き時は P×Q で再計算
   const productMarginRate=v.base_margin_rate||0;
   const marginIsOverride=productMarginRate>0;
   const effectiveMarginRate=marginIsOverride?productMarginRate:globalMarginRate;
   const marginSet=effectiveMarginRate>0;
-  const calcV1=p*(1-effectiveMarginRate);
+  // V1（花材原価）は実績単価ベースで固定。単価を変えても仕入れ原価は動かさない。
+  const calcV1=pActual*(1-effectiveMarginRate);
   const hasOverride=v.actual_v1!=null&&v.actual_v1>0;
   const v1=hasOverride?v.actual_v1:calcV1;
+  // V2（委託手数料）は実効単価で再計算
   const v2=p*commissionRate;
   const actualV=v1+v2;
   const known=marginSet||hasOverride;
   const m=known?p-actualV:null;
   const mq=known?m*qty:null;
-  return {...agg,p,pq,baseMarginRate:effectiveMarginRate,productMarginRate,marginIsOverride,marginSet,hasOverride,v1,v2,actualV,m,mq};
+  return {...agg,p,pActual,priceHasOverride,pq,baseMarginRate:effectiveMarginRate,productMarginRate,marginIsOverride,marginSet,hasOverride,v1,v2,actualV,m,mq};
 }
 
 function prepareRows(computed){
@@ -551,34 +628,66 @@ function renderSummary(rows){
   estEl.textContent=fmtYen(estimatedMQ);
 
   const achEl=document.getElementById('card-achievement');
+  const estSub=document.getElementById('card-mq-estimated-sub');
   if(targetMQ!=null&&targetMQ>0){
     achEl.textContent=(totalMQ/targetMQ*100).toFixed(1)+'%';
     estEl.className='card-value '+(estimatedMQ>=targetMQ?'mq':'neg');
+    if(estSub)estSub.textContent='目標比 '+(estimatedMQ/targetMQ*100).toFixed(1)+'%';
   }else{
     achEl.textContent='—';
     estEl.className='card-value mq';
+    if(estSub)estSub.textContent='';
   }
+
+  const badge=document.getElementById('sim-badge');
+  if(badge)badge.classList.toggle('show',simIsActive());
 
   const note=document.getElementById('summary-note');
   note.textContent=unknownCount>0?`※基本粗利率・実原価が未設定の商品（${unknownCount}件）はMQ合計に含まれていません。`:'';
 }
 
-function makeNumberInput(value,className,step,onCommit){
+function makeNumberInput(value,className,step,onCommit,fkey){
   const inp=document.createElement('input');
   inp.type='number';
   inp.className=className;
   inp.value=value;
   inp.step=step;
+  if(fkey)inp.dataset.fkey=fkey;
+  // Tab/Enterで値を確定するとrenderTable()が表を作り直すためフォーカスが失われる。
+  // どの欄からどちらへ抜けようとしたかを控えておき、再描画後に隣の欄へ戻す。
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Tab')pendingTab={dir:e.shiftKey?-1:1,key:inp.dataset.fkey||null,ts:Date.now()};
+    else if(e.key==='Enter')pendingTab={dir:0,key:inp.dataset.fkey||null,ts:Date.now()};
+  });
   inp.addEventListener('change',()=>onCommit(parseFloat(inp.value)||0));
   return inp;
 }
 
-function refreshSummary(){
-  renderSummary(aggRows.map(computeRow));
+// renderTable()で表を作り直した直後に、Tab/Enterで抜けようとした欄の隣へフォーカスを戻す。
+function restoreTabFocus(tbody){
+  // Tab/Enter → change → renderTable は同一イベントループ内で完結するため、
+  // これより古いヒントは別操作の取りこぼし（誤爆）とみなして無視する。
+  if(!pendingTab||Date.now()-pendingTab.ts>250){pendingTab=null;return;}
+  const pt=pendingTab;pendingTab=null;
+  if(pt.key==null)return;
+  const inputs=[...tbody.querySelectorAll('input[data-fkey]')].filter(el=>!el.disabled);
+  const idx=inputs.findIndex(el=>el.dataset.fkey===pt.key);
+  if(idx===-1)return;
+  const target=inputs[idx+pt.dir];
+  if(!target)return;
+  // ブラウザ既定のTab移動が終わった後に上書きしたいのでsetTimeoutで次のタスクに回す。
+  // 移動先の数値は毎回すべて選択状態にして、すぐ上書き入力できるようにする
+  // （type=number では setSelectionRange は例外になるため select() を使う）。
+  setTimeout(()=>{
+    target.focus();
+    try{target.select();}catch(_){}
+  },0);
 }
 
 function renderTable(){
   const computed=aggRows.map(computeRow);
+  // 施策後MQ（＝MQ + シミュレーションのMQ増分合計）。ソートキー estMQ 用に行へ持たせる。
+  computed.forEach(r=>{const d=computeSimDelta(r);r.estMQ=r.mq==null?null:r.mq+(d.total||0);});
   const rows=prepareRows(computed);
   renderSummary(computed);
 
@@ -601,7 +710,7 @@ function renderTable(){
       const trHead=document.createElement('tr');
       trHead.className='group-header';
       const td=document.createElement('td');
-      td.colSpan=16;
+      td.colSpan=18;
       td.textContent=GROUP_LABEL[lastGroup];
       trHead.appendChild(td);
       tbody.appendChild(trHead);
@@ -621,7 +730,22 @@ function renderTable(){
     tr.appendChild(tdName);
 
     const tdQty=document.createElement('td');tdQty.textContent=fmtNum(row.qty);tr.appendChild(tdQty);
-    const tdP=document.createElement('td');tdP.textContent=fmtYen(row.p);tr.appendChild(tdP);
+
+    const tdP=document.createElement('td');
+    tdP.textContent=fmtYen(row.p);
+    if(row.priceHasOverride){
+      const tag=document.createElement('span');tag.className='override-tag';tag.textContent='実';tdP.appendChild(tag);
+      const orig=document.createElement('div');orig.className='unset';orig.textContent='実績 '+fmtYen(row.pActual);tdP.appendChild(orig);
+    }
+    tr.appendChild(tdP);
+
+    const tdActualP=document.createElement('td');
+    tdActualP.appendChild(makeNumberInput(row.priceHasOverride?row.p:'','yen-input',1,val=>{
+      vSettings[row.product_name]={...(vSettings[row.product_name]||{}),actual_price:val};
+      renderTable();
+    },'p:'+row.product_name));
+    tr.appendChild(tdActualP);
+
     const tdPQ=document.createElement('td');tdPQ.textContent=fmtYen(row.pq);tr.appendChild(tdPQ);
 
     const tdBaseMargin=document.createElement('td');
@@ -629,7 +753,7 @@ function renderTable(){
       const rate=val/100;
       vSettings[row.product_name]={...(vSettings[row.product_name]||{}),base_margin_rate:rate};
       renderTable();
-    });
+    },'m:'+row.product_name);
     marginInput.placeholder=(globalMarginRate*100).toFixed(1);
     if(row.hasOverride){
       marginInput.disabled=true;
@@ -639,6 +763,7 @@ function renderTable(){
     tr.appendChild(tdBaseMargin);
 
     const tdV1=document.createElement('td');
+    tdV1.className='detail-col';
     tdV1.textContent=fmtYen(row.v1);
     if(row.hasOverride){const tag=document.createElement('span');tag.className='override-tag';tag.textContent='実';tdV1.appendChild(tag);}
     else if(!row.marginIsOverride&&row.marginSet){const tag=document.createElement('span');tag.className='override-tag';tag.style.color='var(--gray-400)';tag.textContent='既定';tdV1.appendChild(tag);}
@@ -649,11 +774,11 @@ function renderTable(){
     tdActualV1.appendChild(makeNumberInput(row.hasOverride?row.v1:'','yen-input',1,val=>{
       vSettings[row.product_name]={...(vSettings[row.product_name]||{}),actual_v1:val};
       renderTable();
-    }));
+    },'v1:'+row.product_name));
     tr.appendChild(tdActualV1);
 
-    const tdV2=document.createElement('td');tdV2.textContent=fmtYen(row.v2);tr.appendChild(tdV2);
-    const tdActualV=document.createElement('td');tdActualV.textContent=fmtYen(row.actualV);tr.appendChild(tdActualV);
+    const tdV2=document.createElement('td');tdV2.className='detail-col';tdV2.textContent=fmtYen(row.v2);tr.appendChild(tdV2);
+    const tdActualV=document.createElement('td');tdActualV.className='detail-col';tdActualV.textContent=fmtYen(row.actualV);tr.appendChild(tdActualV);
     const tdM=document.createElement('td');tdM.textContent=fmtYen(row.m);tr.appendChild(tdM);
 
     const tdMQ=document.createElement('td');
@@ -661,29 +786,33 @@ function renderTable(){
     tdMQ.className=row.mq!=null&&row.mq<0?'mq-value neg':'mq-value';
     tr.appendChild(tdMQ);
 
-    // シミュレーション：追加Q個 / 追加V円 → Qのみ・Vのみ・合計のMQ増分
+    // シミュレーション：追加Q（束） / V増減／束 → Q影響・V影響・合計のMQ増分
     const state=simState[row.product_name]||{extraQty:0,extraV:0};
     simState[row.product_name]=state;
 
     const tdExtraQty=document.createElement('td');
-    tdExtraQty.appendChild(makeNumberInput(state.extraQty,'sim-input',1,val=>{state.extraQty=val;renderDelta();refreshSummary();}));
+    tdExtraQty.appendChild(makeNumberInput(state.extraQty,'sim-input',1,val=>{state.extraQty=val;renderTable();},'q:'+row.product_name));
     tr.appendChild(tdExtraQty);
 
-    const tdQOnly=document.createElement('td');
+    const tdQOnly=document.createElement('td');tdQOnly.className='detail-col';
     const qOnlySpan=document.createElement('span');qOnlySpan.className='delta';tdQOnly.appendChild(qOnlySpan);
     tr.appendChild(tdQOnly);
 
     const tdExtraV=document.createElement('td');
-    tdExtraV.appendChild(makeNumberInput(state.extraV,'sim-input',1,val=>{state.extraV=val;renderDelta();refreshSummary();}));
+    tdExtraV.appendChild(makeNumberInput(state.extraV,'sim-input',1,val=>{state.extraV=val;renderTable();},'v:'+row.product_name));
     tr.appendChild(tdExtraV);
 
-    const tdVOnly=document.createElement('td');
+    const tdVOnly=document.createElement('td');tdVOnly.className='detail-col';
     const vOnlySpan=document.createElement('span');vOnlySpan.className='delta';tdVOnly.appendChild(vOnlySpan);
     tr.appendChild(tdVOnly);
 
     const tdTotal=document.createElement('td');
     const totalSpan=document.createElement('span');totalSpan.className='delta';tdTotal.appendChild(totalSpan);
     tr.appendChild(tdTotal);
+
+    const tdEst=document.createElement('td');
+    const estSpan=document.createElement('span');estSpan.className='mq-value';tdEst.appendChild(estSpan);
+    tr.appendChild(tdEst);
 
     function setDelta(span,val){
       if(val==null){span.textContent='—';span.className='delta';return;}
@@ -695,6 +824,9 @@ function renderTable(){
       setDelta(qOnlySpan,d.qOnly);
       setDelta(vOnlySpan,d.vOnly);
       setDelta(totalSpan,d.total);
+      const est=row.mq==null?null:row.mq+(d.total||0);
+      estSpan.textContent=fmtYen(est);
+      estSpan.className='mq-value'+(est!=null&&est<0?' neg':'');
     }
     renderDelta();
 
@@ -702,6 +834,7 @@ function renderTable(){
   });
 
   updateSortArrows();
+  restoreTabFocus(tbody);
 }
 
 function initSortHeaders(){
@@ -729,11 +862,16 @@ async function loadAndRender(){
   renderTable();
 }
 
-initSettingsPanel();
-initPeriodSelect();
-initSortHeaders();
-initScenarioPanel();
-loadAndRender();
+async function init(){
+  initSettingsPanel();
+  initPeriodSelect();
+  initSortHeaders();
+  initScenarioPanel();
+  initColToggle();
+  await loadSettingsFromDB();
+  loadAndRender();
+}
+init();
 </script>
 </body>
 </html>
