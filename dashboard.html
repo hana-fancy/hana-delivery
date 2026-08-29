@@ -41,7 +41,7 @@ input[type=number]:disabled{background:var(--gray-100);color:var(--gray-400);cur
 .card input[type=number]{font-size:22px;font-weight:700;color:var(--gray-900);border:none;padding:0;background:transparent;width:100%;}
 .card input[type=number]:focus{outline:1px solid var(--gray-200);}
 .summary-note{font-size:11px;color:var(--gray-400);margin-bottom:16px;}
-.sim-badge{display:none;background:var(--orange-pale);color:var(--orange);border-radius:var(--radius-sm);padding:6px 12px;font-size:12px;font-weight:700;margin-bottom:12px;line-height:1.5;}
+.sim-badge{display:none;background:var(--blue-pale);color:var(--blue);border-radius:var(--radius-sm);padding:6px 12px;font-size:12px;font-weight:700;margin-bottom:12px;line-height:1.5;}
 .sim-badge.show{display:inline-block;}
 .card-sub{font-size:11px;color:var(--gray-400);font-weight:600;margin-top:3px;}
 .table-title-row{display:flex;align-items:center;gap:16px;margin-bottom:8px;flex-wrap:wrap;}
@@ -50,7 +50,7 @@ input[type=number]:disabled{background:var(--gray-100);color:var(--gray-400);cur
 .col-toggle{font-size:12px;color:var(--gray-600);cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:5px;}
 .table-wrap{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow-sm);overflow-x:auto;}
 table{border-collapse:collapse;width:100%;min-width:1150px;font-size:12.5px;}
-#main-table:not(.lean){min-width:1720px;}
+#main-table:not(.lean){min-width:1800px;}
 #main-table.lean .detail-col{display:none;}
 th,td{padding:8px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--gray-100);}
 th:first-child,td:first-child{text-align:left;position:sticky;left:0;z-index:1;}
@@ -74,6 +74,7 @@ tr.group-header td{background:var(--gray-800);color:var(--white);font-weight:700
 .override-tag{font-size:9px;color:var(--amber);font-weight:700;margin-left:3px;}
 .rate-input{width:56px;text-align:right;}
 .yen-input{width:70px;text-align:right;}
+.baseline-hint{color:var(--gray-400);}
 .sim-input{width:72px;text-align:right;}
 .mq-value{font-weight:700;color:var(--green);}
 .mq-value.neg{color:var(--red);}
@@ -94,7 +95,7 @@ tr.group-header td{background:var(--gray-800);color:var(--white);font-weight:700
   th,td{padding:3px 4px;position:static!important;box-shadow:none!important;}
   input{border:none!important;background:transparent!important;-webkit-appearance:none;appearance:none;padding:0!important;width:auto!important;font-size:9px!important;color:var(--gray-900)!important;}
   input::-webkit-inner-spin-button,input::-webkit-outer-spin-button{display:none!important;}
-  .sim-badge.show{display:block;border:1px solid var(--orange);}
+  .sim-badge.show{display:block;border:1px solid var(--blue);}
   @page{margin:10mm;}
 }
 </style>
@@ -167,7 +168,7 @@ tr.group-header td{background:var(--gray-800);color:var(--white);font-weight:700
   <div class="card"><div class="card-label">MQ増分合計（シミュレーション）</div><div class="card-value" id="card-mq-delta">—</div></div>
   <div class="card"><div class="card-label">推定合計MQ（シミュレーション後）</div><div class="card-value mq" id="card-mq-estimated">—</div><div class="card-sub" id="card-mq-estimated-sub"></div></div>
 </div>
-<div class="sim-badge" id="sim-badge">シミュレーション反映中 — 行の上書き入力（実価格・実原価・基本粗利率）や追加Q・V増減が「合計PQ」「合計MQ（実績）」にも反映されています</div>
+<div class="sim-badge" id="sim-badge">施策入力あり — 想定単価・想定原価・追加Q・V増減は「施策後MQ」「推定合計MQ」に反映されます（実績側は変わりません）</div>
 <div class="summary-note" id="summary-note"></div>
 
 <div class="table-title-row">
@@ -182,21 +183,22 @@ tr.group-header td{background:var(--gray-800);color:var(--white);font-weight:700
         <th>商品名</th>
         <th class="sortable" data-key="qty">Q<span class="arrow"></span></th>
         <th class="sortable" data-key="p">P（平均単価）<span class="arrow"></span></th>
-        <th>実価格入力(円)</th>
+        <th title="「この単価で売ったら」の試算。施策後MQ・推定合計MQに反映（実績は変わりません）">想定単価</th>
         <th class="sortable" data-key="pq">PQ<span class="arrow"></span></th>
         <th>基本粗利率%</th>
         <th class="detail-col">V1（原価）</th>
-        <th>実原価入力(円)</th>
+        <th title="「この原価だったら」の試算。施策後MQ・推定合計MQに反映（実績は変わりません）">想定原価</th>
         <th class="detail-col">V2（委託手数料）</th>
         <th class="detail-col">実V</th>
         <th class="sortable" data-key="m">M（粗利単価）<span class="arrow"></span></th>
+        <th class="detail-col" title="想定単価・想定原価・V増減を反映した1束あたりの粗利（結果表示）">想定M</th>
         <th class="sortable" data-key="mq">MQ<span class="arrow"></span></th>
         <th title="販売数を何束増やすかの仮定">追加Q（束）</th>
         <th class="detail-col" title="追加Qだけによる限界利益の増分">MQ影響(Q)</th>
         <th title="1束あたりの変動費（花材原価）の増減。＋入力でコスト増→MQ減。既存Q・追加Qの両方に適用">V増減／束</th>
         <th class="detail-col" title="V増減だけによる限界利益の変化">MQ影響(V)</th>
         <th title="追加Q・V増減・単価変更をすべて反映した増分">MQ増分(計)</th>
-        <th class="sortable" data-key="estMQ" title="追加Q・V増減・単価変更をすべて反映した後のこの商品のMQ">施策後MQ<span class="arrow"></span></th>
+        <th class="sortable" data-key="estMQ" title="想定M ×（実績Q＋追加Q）。追加Q・V増減・想定単価・想定原価をすべて反映">施策後MQ<span class="arrow"></span></th>
       </tr>
     </thead>
     <tbody id="table-body"></tbody>
@@ -362,7 +364,9 @@ function initColToggle(){
 }
 
 function simIsActive(){
-  const vAny=Object.values(vSettings).some(v=>v&&((v.base_margin_rate||0)>0||(v.actual_v1!=null&&v.actual_v1>0)||(v.actual_price!=null&&v.actual_price>0)));
+  // 想定単価・想定原価・追加Q・V増減のいずれかが入っていれば「施策入力あり」。
+  // 基本粗利率は実績側の補正なので含めない。
+  const vAny=Object.values(vSettings).some(v=>v&&((v.actual_v1!=null&&v.actual_v1>0)||(v.actual_price!=null&&v.actual_price>0)));
   const sAny=Object.values(simState).some(s=>s&&((s.extraQty||0)!==0||(s.extraV||0)!==0));
   return vAny||sAny;
 }
@@ -549,28 +553,29 @@ function initScenarioPanel(){
   });
 }
 
+// 実績レイヤーのみを計算する。想定単価・想定原価（施策）は computeScenario 側で反映。
 function computeRow(agg){
   const v=vSettings[agg.product_name]||{};
   const qty=agg.qty;
   const pActual=qty>0?agg.amount/qty:0;               // 実績の平均単価（売上実額ベース）
-  const priceHasOverride=v.actual_price!=null&&v.actual_price>0;
-  const p=priceHasOverride?v.actual_price:pActual;    // 実効単価（以降の計算で使う）
-  const pq=p*qty;                                     // 単価上書き時は P×Q で再計算
   const productMarginRate=v.base_margin_rate||0;
   const marginIsOverride=productMarginRate>0;
   const effectiveMarginRate=marginIsOverride?productMarginRate:globalMarginRate;
-  const marginSet=effectiveMarginRate>0;
-  // V1（花材原価）は実績単価ベースで固定。単価を変えても仕入れ原価は動かさない。
-  const calcV1=pActual*(1-effectiveMarginRate);
-  const hasOverride=v.actual_v1!=null&&v.actual_v1>0;
-  const v1=hasOverride?v.actual_v1:calcV1;
-  // V2（委託手数料）は実効単価で再計算
-  const v2=p*commissionRate;
+  const marginSet=effectiveMarginRate>0;              // 粗利率が立っていればMQを数値化
+  const calcV1=pActual*(1-effectiveMarginRate);       // 基本粗利率ベースのV1
+  const v1=calcV1;
+  const v2=pActual*commissionRate;
   const actualV=v1+v2;
-  const known=marginSet||hasOverride;
-  const m=known?p-actualV:null;
+  const known=marginSet;
+  const m=known?pActual-actualV:null;
   const mq=known?m*qty:null;
-  return {...agg,p,pActual,priceHasOverride,pq,baseMarginRate:effectiveMarginRate,productMarginRate,marginIsOverride,marginSet,hasOverride,v1,v2,actualV,m,mq};
+  // 施策（想定単価・想定原価）は施策後レイヤーへ。ここでは入力有無フラグと元値だけ持つ。
+  const priceHasOverride=v.actual_price!=null&&v.actual_price>0;
+  const costHasOverride=v.actual_v1!=null&&v.actual_v1>0;
+  return {...agg,p:pActual,pActual,pq:pActual*qty,
+    baseMarginRate:effectiveMarginRate,productMarginRate,marginIsOverride,marginSet,known,
+    priceHasOverride,costHasOverride,priceOv:v.actual_price||null,costOv:v.actual_v1||null,
+    calcV1,v1,v2,actualV,m,mq};
 }
 
 function prepareRows(computed){
@@ -600,25 +605,30 @@ function updateSortArrows(){
   document.getElementById('reset-sort').classList.toggle('show',sortState.mode==='metric');
 }
 
-function computeSimDelta(row){
-  if(row.mq==null)return {qOnly:null,vOnly:null,total:null};
-  const state=simState[row.product_name]||{extraQty:0,extraV:0};
-  const dQ=state.extraQty||0,dV=state.extraV||0;
-  const qOnly=dQ*(row.p-row.actualV);
-  const vOnly=-dV*row.qty;
-  const newMQ=(row.p-(row.actualV+dV))*(row.qty+dQ);
-  const total=newMQ-row.mq;
-  return {qOnly,vOnly,total};
+// 施策後レイヤー：想定単価・想定原価・追加Q・V増減をまとめて反映し、施策後MQと実績からの増分を返す。
+function computeScenario(row){
+  if(!row.known)return {planMQ:null,delta:null,qOnly:null,vOnly:null,planM:null};
+  const s=simState[row.product_name]||{extraQty:0,extraV:0};
+  const dQ=s.extraQty||0,dV=s.extraV||0;
+  const planP=row.priceHasOverride?row.priceOv:row.pActual;   // 想定単価（なければ実績平均単価）
+  const planV1=row.costHasOverride?row.costOv:row.calcV1;      // 想定原価（なければ計算上のV1）
+  const planV2=planP*commissionRate;                          // 委託手数料は想定単価で再計算
+  const planM=planP-(planV1+planV2+dV);
+  const planMQ=planM*(row.qty+dQ);
+  const delta=planMQ-row.mq;
+  const qOnly=dQ*row.m;      // 追加Qだけの寄与（実績Mベース、目安）
+  const vOnly=-dV*row.qty;   // V増減だけの寄与（既存Qベース、目安）
+  return {planMQ,delta,qOnly,vOnly,planM};
 }
 
 function renderSummary(rows){
   const totalQ=rows.reduce((s,r)=>s+r.qty,0);
   const totalPQ=rows.reduce((s,r)=>s+r.pq,0);
   const known=rows.filter(r=>r.mq!=null);
-  const totalMQ=known.reduce((s,r)=>s+r.mq,0);
+  const totalMQ=known.reduce((s,r)=>s+r.mq,0);              // 実績（想定単価・原価は含めない）
   const unknownCount=rows.length-known.length;
-  const mqDeltaTotal=rows.reduce((s,r)=>s+(computeSimDelta(r).total||0),0);
-  const estimatedMQ=totalMQ+mqDeltaTotal;
+  const mqDeltaTotal=rows.reduce((s,r)=>s+(computeScenario(r).delta||0),0);
+  const estimatedMQ=totalMQ+mqDeltaTotal;                  // 施策後（想定単価・原価・追加Q・V増減を反映）
 
   document.getElementById('card-q').textContent=fmtNum(totalQ)+' 束';
   document.getElementById('card-pq').textContent=fmtYen(totalPQ);
@@ -643,7 +653,7 @@ function renderSummary(rows){
   if(badge)badge.classList.toggle('show',simIsActive());
 
   const note=document.getElementById('summary-note');
-  note.textContent=unknownCount>0?`※基本粗利率・実原価が未設定の商品（${unknownCount}件）はMQ合計に含まれていません。`:'';
+  note.textContent=unknownCount>0?`※基本粗利率が未設定の商品（${unknownCount}件）はMQ合計・施策後MQに含まれていません。`:'';
 }
 
 function makeNumberInput(value,className,step,onCommit,fkey){
@@ -686,8 +696,8 @@ function restoreTabFocus(tbody){
 
 function renderTable(){
   const computed=aggRows.map(computeRow);
-  // 施策後MQ（＝MQ + シミュレーションのMQ増分合計）。ソートキー estMQ 用に行へ持たせる。
-  computed.forEach(r=>{const d=computeSimDelta(r);r.estMQ=r.mq==null?null:r.mq+(d.total||0);});
+  // 施策後MQ。ソートキー estMQ 用に行へ持たせる。
+  computed.forEach(r=>{r.estMQ=computeScenario(r).planMQ;});
   const rows=prepareRows(computed);
   renderSummary(computed);
 
@@ -710,7 +720,7 @@ function renderTable(){
       const trHead=document.createElement('tr');
       trHead.className='group-header';
       const td=document.createElement('td');
-      td.colSpan=18;
+      td.colSpan=19;
       td.textContent=GROUP_LABEL[lastGroup];
       trHead.appendChild(td);
       tbody.appendChild(trHead);
@@ -731,55 +741,88 @@ function renderTable(){
 
     const tdQty=document.createElement('td');tdQty.textContent=fmtNum(row.qty);tr.appendChild(tdQty);
 
+    // P列は実績平均単価のみ。想定単価は隣の入力欄で横並びに見せる。
     const tdP=document.createElement('td');
-    tdP.textContent=fmtYen(row.p);
-    if(row.priceHasOverride){
-      const tag=document.createElement('span');tag.className='override-tag';tag.textContent='実';tdP.appendChild(tag);
-      const orig=document.createElement('div');orig.className='unset';orig.textContent='実績 '+fmtYen(row.pActual);tdP.appendChild(orig);
-    }
+    tdP.textContent=fmtYen(row.pActual);
     tr.appendChild(tdP);
 
+    // 想定単価：空欄ではなく実績平均単価を初期表示。上下ボタンがそこから±1円で効く。
+    // 実績平均単価と同じ値に戻したら想定解除扱い。値は施策後MQ・推定合計MQにのみ反映。
+    const priceBaseline=row.pActual>0?Math.round(row.pActual):null;
+    const priceInp=makeNumberInput(
+      row.priceHasOverride?row.priceOv:(priceBaseline!=null?priceBaseline:''),
+      'yen-input'+(row.priceHasOverride?'':' baseline-hint'),1,
+      val=>{
+        const nv=(val>0&&!(priceBaseline!=null&&Math.round(val)===priceBaseline))?val:null;
+        vSettings[row.product_name]={...(vSettings[row.product_name]||{}),actual_price:nv};
+        renderTable();
+      },'p:'+row.product_name);
+    priceInp.title=row.priceHasOverride
+      ?'想定単価。実績平均単価に戻すと解除されます'
+      :'実績平均単価。ここを変えると「この単価で売ったら」の施策後MQを試算します（実績は変わりません）';
     const tdActualP=document.createElement('td');
-    tdActualP.appendChild(makeNumberInput(row.priceHasOverride?row.p:'','yen-input',1,val=>{
-      vSettings[row.product_name]={...(vSettings[row.product_name]||{}),actual_price:val};
-      renderTable();
-    },'p:'+row.product_name));
+    tdActualP.appendChild(priceInp);
+    if(row.priceHasOverride){const t=document.createElement('span');t.className='override-tag';t.textContent='想';tdActualP.appendChild(t);}
     tr.appendChild(tdActualP);
 
     const tdPQ=document.createElement('td');tdPQ.textContent=fmtYen(row.pq);tr.appendChild(tdPQ);
 
+    // 基本粗利率：空欄ではなく現在の適用率を初期表示。▲▼は1ポイント刻み、0未満不可。
+    // 一括値と同じに戻したら行別上書きは解除。
+    const marginBasePct=+(globalMarginRate*100).toFixed(1);
     const tdBaseMargin=document.createElement('td');
-    const marginInput=makeNumberInput(row.marginIsOverride?(row.productMarginRate*100).toFixed(1):'','rate-input',0.1,val=>{
-      const rate=val/100;
-      vSettings[row.product_name]={...(vSettings[row.product_name]||{}),base_margin_rate:rate};
-      renderTable();
-    },'m:'+row.product_name);
-    marginInput.placeholder=(globalMarginRate*100).toFixed(1);
-    if(row.hasOverride){
-      marginInput.disabled=true;
-      marginInput.title='実原価入力が優先されているため、基本粗利率はV1の計算に使われません';
-    }
+    const marginInput=makeNumberInput(
+      (row.marginIsOverride?row.productMarginRate*100:marginBasePct).toFixed(1),
+      'rate-input'+(row.marginIsOverride?'':' baseline-hint'),1,
+      val=>{
+        const rate=(val>0&&Math.abs(val-marginBasePct)>=0.05)?val/100:0;
+        vSettings[row.product_name]={...(vSettings[row.product_name]||{}),base_margin_rate:rate};
+        renderTable();
+      },'m:'+row.product_name);
+    marginInput.min=0;marginInput.max=100;
+    marginInput.title=row.marginIsOverride
+      ?'行別の粗利率。一括値（'+marginBasePct.toFixed(1)+'%）に戻すと解除されます'
+      :'一括値を適用中。この商品の実際の粗利率が分かる場合に変更（実績側の補正）';
     tdBaseMargin.appendChild(marginInput);
     tr.appendChild(tdBaseMargin);
 
+    // V1列は基本粗利率ベースの計算値のみ。想定原価は隣の入力欄。
     const tdV1=document.createElement('td');
     tdV1.className='detail-col';
-    tdV1.textContent=fmtYen(row.v1);
-    if(row.hasOverride){const tag=document.createElement('span');tag.className='override-tag';tag.textContent='実';tdV1.appendChild(tag);}
-    else if(!row.marginIsOverride&&row.marginSet){const tag=document.createElement('span');tag.className='override-tag';tag.style.color='var(--gray-400)';tag.textContent='既定';tdV1.appendChild(tag);}
-    if(!row.marginSet&&!row.hasOverride){tdV1.innerHTML='<span class="unset">未設定</span>';}
+    if(row.marginSet){
+      tdV1.textContent=fmtYen(row.calcV1);
+      if(!row.marginIsOverride){const tag=document.createElement('span');tag.className='override-tag';tag.style.color='var(--gray-400)';tag.textContent='既定';tdV1.appendChild(tag);}
+    }else{
+      tdV1.innerHTML='<span class="unset">未設定</span>';
+    }
     tr.appendChild(tdV1);
 
+    // 想定原価：空欄ではなく計算上のV1を初期表示。上下ボタンがそこから±1円で効く。
+    // 計算上のV1と同じ値に戻したら想定解除扱い。値は施策後MQ・推定合計MQにのみ反映。
+    const costBaseline=row.marginSet?Math.round(row.calcV1):null;
+    const costInp=makeNumberInput(
+      row.costHasOverride?row.costOv:(costBaseline!=null?costBaseline:''),
+      'yen-input'+(row.costHasOverride?'':' baseline-hint'),1,
+      val=>{
+        const nv=(val>0&&!(costBaseline!=null&&Math.round(val)===costBaseline))?val:null;
+        vSettings[row.product_name]={...(vSettings[row.product_name]||{}),actual_v1:nv};
+        renderTable();
+      },'v1:'+row.product_name);
+    costInp.title=row.costHasOverride
+      ?'想定原価。計算上のV1に戻すと解除されます'
+      :'計算上のV1原価。ここを変えると「この原価だったら」の施策後MQを試算します（実績は変わりません）';
     const tdActualV1=document.createElement('td');
-    tdActualV1.appendChild(makeNumberInput(row.hasOverride?row.v1:'','yen-input',1,val=>{
-      vSettings[row.product_name]={...(vSettings[row.product_name]||{}),actual_v1:val};
-      renderTable();
-    },'v1:'+row.product_name));
+    tdActualV1.appendChild(costInp);
+    if(row.costHasOverride){const t=document.createElement('span');t.className='override-tag';t.textContent='想';tdActualV1.appendChild(t);}
     tr.appendChild(tdActualV1);
 
     const tdV2=document.createElement('td');tdV2.className='detail-col';tdV2.textContent=fmtYen(row.v2);tr.appendChild(tdV2);
     const tdActualV=document.createElement('td');tdActualV.className='detail-col';tdActualV.textContent=fmtYen(row.actualV);tr.appendChild(tdActualV);
     const tdM=document.createElement('td');tdM.textContent=fmtYen(row.m);tr.appendChild(tdM);
+
+    const tdPlanM=document.createElement('td');tdPlanM.className='detail-col';
+    const planMSpan=document.createElement('span');tdPlanM.appendChild(planMSpan);
+    tr.appendChild(tdPlanM);
 
     const tdMQ=document.createElement('td');
     tdMQ.textContent=fmtYen(row.mq);
@@ -820,13 +863,14 @@ function renderTable(){
       span.className='delta '+(val>0?'pos':val<0?'neg':'');
     }
     function renderDelta(){
-      const d=computeSimDelta(row);
-      setDelta(qOnlySpan,d.qOnly);
-      setDelta(vOnlySpan,d.vOnly);
-      setDelta(totalSpan,d.total);
-      const est=row.mq==null?null:row.mq+(d.total||0);
-      estSpan.textContent=fmtYen(est);
-      estSpan.className='mq-value'+(est!=null&&est<0?' neg':'');
+      const sc=computeScenario(row);
+      setDelta(qOnlySpan,sc.qOnly);
+      setDelta(vOnlySpan,sc.vOnly);
+      setDelta(totalSpan,sc.delta);
+      planMSpan.textContent=fmtYen(sc.planM);
+      planMSpan.className=sc.planM!=null&&sc.planM<0?'mq-value neg':'';
+      estSpan.textContent=fmtYen(sc.planMQ);
+      estSpan.className='mq-value'+(sc.planMQ!=null&&sc.planMQ<0?' neg':'');
     }
     renderDelta();
 
