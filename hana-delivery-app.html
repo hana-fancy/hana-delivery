@@ -1026,6 +1026,21 @@ function montourLookupPrice(price){
   return MONTOUR_PRICE_MAP[price]||{product_name:`カジュアルフラワー（${price}円）`,category:'casual'};
 }
 
+// もんとあーる：2026-09-01 納品分から、DBに保存する price / amount を税抜へ切り替える。
+// メール本文の金額表記は従来どおり税込のままなので、商品判別（MONTOUR_PRICE_MAP /
+// MONTOUR_SPOT_MAP のキー）と raw_label はメール金額（税込）を使い続ける。
+// 変換対象は sales_items に書き込む price / amount のみ。花き（切り花）の消費税は標準税率10%。
+// 既存データ（〜2026-08-31）は税込のまま保持し、遡って変更しない。
+const MONTOUR_TAX_FIX_DATE='2026-09-01';
+const MONTOUR_TAX_RATE=0.1;
+// メール金額（税込・単価）→ DBに保存する単価。境界日より前、または日付不明時は無変換。
+function montourUnitPriceForDb(taxIncludedUnit,salesDate){
+  if(salesDate&&salesDate>=MONTOUR_TAX_FIX_DATE){
+    return Math.round(taxIncludedUnit/(1+MONTOUR_TAX_RATE));
+  }
+  return taxIncludedUnit;
+}
+
 // 主婦の店 メール表記→社内商品マスタ 変換表（2026年6月確定）
 // 主婦の店 レシート表示×季節→社内商品 変換表（2026年6月確定、JANコード対応表ベース）
 // 季節区分: normal(通常)/mothers(母の日)/bon(盆)/higan(彼岸)/newyear(正月)
@@ -3943,10 +3958,13 @@ function parseMontourEmail(body){
       const price=parseInt(im[2].replace(/,/g,''));
       const qty=parseInt(im[3].replace(/,/g,''));
       if(!price||!qty)continue;
+      // メール金額(price)は税込。判別はこの税込金額で行い、DBに保存する単価/金額のみ
+      // 境界日(MONTOUR_TAX_FIX_DATE)以降は税抜へ変換する。
+      const dbUnit=montourUnitPriceForDb(price,salesDate);
       if(label==='産直花'){
-        // 既存ロジック：価格で商品を判別
+        // 既存ロジック：価格で商品を判別（判別キーは税込のまま）
         const mapped=montourLookupPrice(price);
-        items.push({raw_label:`産直花 ${im[2]}`,price,quantity:qty,amount:price*qty,
+        items.push({raw_label:`産直花 ${im[2]}`,price:dbUnit,quantity:qty,amount:dbUnit*qty,
           product_name:mapped.product_name,category:mapped.category});
       } else {
         // 産直花以外：MONTOUR_SPOT_MAPで季節を考慮して変換
@@ -3958,7 +3976,7 @@ function parseMontourEmail(body){
         }
         items.push({
           raw_label:`${label} ${im[2]}`,
-          price,quantity:qty,amount:price*qty,
+          price:dbUnit,quantity:qty,amount:dbUnit*qty,
           product_name:productName||`${label}（${price.toLocaleString()}円）`,
           category:productName?'spot':'casual'
         });
