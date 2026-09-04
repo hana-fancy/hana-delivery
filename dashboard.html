@@ -84,6 +84,64 @@ tr.group-header td{background:var(--gray-800);color:var(--white);font-weight:700
 .empty-msg{padding:40px;text-align:center;color:var(--gray-400);font-size:13px;}
 .sql-hint{margin-top:14px;font-size:11.5px;color:var(--gray-400);}
 
+/* ===== タブ ===== */
+.tabs{display:flex;gap:4px;margin:14px 0 2px;border-bottom:2px solid var(--gray-200);}
+.tab-btn{font-family:inherit;font-size:13px;font-weight:700;padding:8px 18px;border:none;background:transparent;color:var(--gray-400);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;border-radius:6px 6px 0 0;}
+.tab-btn:hover{color:var(--gray-600);}
+.tab-btn.active{color:var(--green);border-bottom-color:var(--green);}
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
+
+/* ===== 予定タブ グリッド ===== */
+#plan-refwarn{display:none;background:var(--orange-pale);color:var(--orange);border-radius:var(--radius-sm);padding:8px 12px;font-size:12px;margin-bottom:12px;line-height:1.6;}
+#plan-table{border-collapse:separate;border-spacing:0;width:100%;font-size:11px;}
+#plan-table th,#plan-table td{border-bottom:1px solid var(--gray-200);border-right:1px solid var(--gray-100);padding:3px 4px;text-align:center;white-space:nowrap;vertical-align:top;}
+#plan-table thead th{background:var(--gray-50);color:var(--gray-600);font-weight:700;position:sticky;top:0;z-index:2;}
+#plan-table th.pl-name-col,#plan-table td.pl-name-col{position:sticky;left:0;background:var(--white);text-align:left;font-weight:600;color:var(--gray-900);z-index:1;box-shadow:1px 0 0 var(--gray-200);}
+#plan-table thead th.pl-name-col{z-index:3;}
+.pl-wd{font-weight:400;color:var(--gray-400);font-size:10px;}
+.pl-peak-col{background:var(--purple-pale);box-shadow:inset 2px 0 0 var(--purple),inset -2px 0 0 var(--purple);}
+.pl-ref{color:var(--gray-400);font-size:10.5px;line-height:1.4;padding-bottom:2px;border-bottom:1px dashed var(--gray-200);margin-bottom:3px;}
+.pl-ref-none{color:var(--gray-200);}
+.pl-plan{display:flex;flex-direction:column;gap:2px;border-radius:4px;padding:2px;}
+.pl-plan label{display:flex;align-items:center;gap:2px;font-size:9px;color:var(--gray-600);justify-content:flex-end;}
+.pl-plan-tot{font-size:9.5px;font-weight:700;color:var(--gray-700);text-align:right;padding-top:2px;margin-top:1px;border-top:1px dashed var(--gray-200);}
+.pl-in{width:56px;text-align:right;font-size:10.5px;padding:1px 2px;border:1px solid var(--gray-200);border-radius:3px;font-family:inherit;}
+.pl-in:focus{outline:1.5px solid var(--blue);border-color:var(--blue);}
+#plan-table thead th{min-width:64px;}
+#plan-table th.pl-name-col{min-width:0;}
+.pl-alert-red .pl-plan{background:var(--red-pale);}
+.pl-alert-orange .pl-plan{background:var(--orange-pale);}
+.pl-alert-yellow .pl-plan{background:#fef7e0;}
+.pl-alert-blue .pl-plan{background:var(--blue-pale);}
+/* 右に固定する2列：期間計（横計）＋ 目標Q（補正ベースライン×係数） */
+#plan-table th.pl-total-col,#plan-table td.pl-total-col,#plan-table th.pl-tgt-col,#plan-table td.pl-tgt-col{position:sticky;background:var(--white);z-index:1;min-width:78px;width:78px;box-shadow:-1px 0 0 var(--gray-300);}
+#plan-table th.pl-total-col,#plan-table td.pl-total-col{right:78px;}
+#plan-table th.pl-tgt-col,#plan-table td.pl-tgt-col{right:0;}
+#plan-table thead th.pl-total-col,#plan-table thead th.pl-tgt-col{z-index:3;background:var(--gray-50);}
+#plan-table tfoot td.pl-total-col,#plan-table tfoot td.pl-tgt-col{background:var(--gray-50);font-weight:700;}
+.pl-tgt-col .pl-rowtot,.pl-tgt-col .pl-ref{color:var(--green);}
+.pl-rowtot{font-size:10.5px;color:var(--gray-800);min-width:38px;text-align:right;font-variant-numeric:tabular-nums;}
+tr.pl-sep td{background:var(--gray-100);color:var(--gray-600);font-weight:700;font-size:10.5px;text-align:left;padding:4px 8px;position:sticky;left:0;cursor:pointer;user-select:none;}
+tr.pl-sep .pl-sep-toggle{display:inline-block;width:14px;color:var(--gray-400);}
+tr.pl-sep .pl-sep-sub{font-weight:400;color:var(--gray-500);margin-left:6px;}
+tr.pl-cum td{background:var(--gray-50);font-weight:700;color:var(--gray-800);}
+tr.pl-cum td.pl-neg{color:var(--red);}
+#plan-table tfoot td.pl-name-col{background:var(--gray-50);}
+
+/* ===== 予定タブ 仮置き生成パネル ===== */
+#plan-gen-table{border-collapse:collapse;width:auto;min-width:0;font-size:12px;}
+#plan-gen-table th,#plan-gen-table td{border:1px solid var(--gray-200);padding:4px 8px;text-align:right;white-space:nowrap;}
+#plan-gen-table th{background:var(--gray-50);color:var(--gray-600);font-weight:700;}
+#plan-gen-table td:first-child,#plan-gen-table td:nth-child(2){text-align:left;}
+#plan-gen-table .pl-gen-target{font-weight:700;color:var(--green);}
+#plan-gen-table input{width:72px;text-align:right;font-size:12px;padding:2px 4px;}
+#plan-gen-table input.pl-gen-factor{width:52px;}
+#plan-gen-table input.pl-gen-lead,#plan-gen-table input.pl-gen-smooth{width:36px;}
+#plan-gen-table input:disabled{background:var(--gray-100);color:var(--gray-400);}
+.pl-gen-prodcell{font-weight:600;}
+.pl-gen-prodcell .pl-gen-sub{display:block;font-weight:400;font-size:10px;color:var(--gray-600);margin-top:3px;}
+
 @media print{
   body{padding:0;background:#fff;}
   .toolbar,#scenario-panel,.banner,.col-toggle,.reset-sort{display:none!important;}
@@ -104,12 +162,20 @@ tr.group-header td{background:var(--gray-800);color:var(--white);font-weight:700
 
 <div class="header">
   <div class="title">経営ダッシュボード</div>
-  <div class="subtitle">v0.1 — スーパー卸 分析タブ</div>
+  <div class="subtitle">v0.1 — スーパー卸（分析・予定）</div>
 </div>
 
+<nav class="tabs">
+  <button type="button" class="tab-btn active" data-tab="analysis">📊 分析</button>
+  <button type="button" class="tab-btn" data-tab="plan">📅 予定</button>
+</nav>
+
+<div class="tab-pane active" id="tab-analysis">
 <div class="toolbar">
-  <label for="period-select">期間</label>
-  <select id="period-select"></select>
+  <label for="period-year-select">年</label>
+  <select id="period-year-select"></select>
+  <label for="period-event-select">物日</label>
+  <select id="period-event-select"></select>
   <span id="period-range" style="font-size:12px;color:var(--gray-400);"></span>
 </div>
 
@@ -205,6 +271,129 @@ tr.group-header td{background:var(--gray-800);color:var(--white);font-weight:700
   </table>
   <div class="empty-msg" id="empty-msg" style="display:none;"></div>
 </div>
+</div><!-- /#tab-analysis -->
+
+<div class="tab-pane" id="tab-plan">
+  <div class="toolbar">
+    <label for="plan-year-select">年</label>
+    <select id="plan-year-select"></select>
+    <label for="plan-event-select">物日</label>
+    <select id="plan-event-select"></select>
+    <label for="plan-refyear-select">比較年</label>
+    <select id="plan-refyear-select"></select>
+    <span id="plan-period-range" style="font-size:12px;color:var(--gray-400);"></span>
+  </div>
+
+  <div class="banner" id="plan-scn-banner">
+    予定シナリオの保存先テーブル（production_plan_scenarios）が見つかりません。保存・呼び出しは使えず、白紙で計画を試算する形になります。
+    Supabaseで下記SQLを実行すると使えるようになります。
+    <div class="sql-hint" id="plan-scn-sql"></div>
+  </div>
+
+  <div class="settings-panel" id="plan-scn-panel">
+    <div class="settings-title">シナリオ（白紙が既定。名前を付けて保存すると呼び出せます）</div>
+    <div class="settings-row">
+      <label for="plan-scn-select">呼び出す</label>
+      <select id="plan-scn-select"><option value="">（白紙）</option></select>
+      <button type="button" id="plan-scn-reset">白紙に戻す</button>
+    </div>
+    <div class="settings-row" style="margin-top:8px;">
+      <label for="plan-scn-name">名前を付けて保存</label>
+      <input type="text" id="plan-scn-name" placeholder="例：A案（残業なし）" style="width:150px;">
+      <label for="plan-scn-memo">メモ</label>
+      <input type="text" id="plan-scn-memo" placeholder="任意" style="width:200px;">
+      <button type="button" id="plan-scn-save">保存</button>
+      <button type="button" id="plan-scn-delete">選択中のシナリオを削除</button>
+    </div>
+    <div class="settings-note" id="plan-scn-msg"></div>
+  </div>
+
+  <details class="settings-panel" id="plan-gen-panel">
+    <summary class="settings-title" style="cursor:pointer;">仮置き生成（参照年カーブ × 係数）</summary>
+    <div class="settings-row" style="margin-top:10px;">
+      <label>方式</label>
+      <label style="font-weight:400;"><input type="radio" name="plan-gen-mode" value="factor" checked> 成長係数</label>
+      <label style="font-weight:400;"><input type="radio" name="plan-gen-mode" value="mq"> 目標MQ</label>
+      <label for="plan-gen-basefactor">既定係数</label>
+      <input type="number" id="plan-gen-basefactor" step="5" style="width:64px;text-align:right;"><span>%</span>
+    </div>
+    <div class="settings-row" style="margin-top:8px;">
+      <label for="plan-gen-lead" title="実際に売れる日の何日前から作り始めるかの目安です。3日なら、ピーク日に売る分を3日前倒しで生産するイメージ。日数を増やすほど生産のピークが売れる日より手前にずれます。">前倒し（リードタイム）</label>
+      <input type="number" id="plan-gen-lead" min="0" step="1" style="width:52px;text-align:right;" title="実際に売れる日の何日前から作り始めるかの目安です。3日なら、ピーク日に売る分を3日前倒しで生産するイメージ。日数を増やすほど生産のピークが売れる日より手前にずれます。"><span>日</span>
+      <label for="plan-gen-smooth" style="margin-left:8px;" title="前倒しで決めた生産日の量を、そこからさらに手前の日数へ均等に分けて山をなだらかにします。日数を増やすほど1日あたりの生産量は減り、期間全体に薄く広がります。">ならし（後方分散）</label>
+      <input type="number" id="plan-gen-smooth" min="1" step="1" style="width:52px;text-align:right;" title="前倒しで決めた生産日の量を、そこからさらに手前の日数へ均等に分けて山をなだらかにします。日数を増やすほど1日あたりの生産量は減り、期間全体に薄く広がります。"><span>日</span>
+    </div>
+    <div class="settings-note" style="margin-top:4px;">
+      前倒し＝「何日前から作り始めるか」、ならし＝「その生産量を何日に分けてなだらかにするか」の目安日数です（詳しくは各入力にカーソルを合わせてください）。
+      価格帯（商品）ごとに下の表で個別に上書きできます（空欄なら上のこの既定値を使用）。
+    </div>
+    <div class="settings-row" id="plan-gen-mq-row" style="margin-top:8px;display:none;">
+      <label for="plan-gen-margin">基準粗利率</label>
+      <input type="number" id="plan-gen-margin" step="1" style="width:60px;text-align:right;"><span>%</span>
+      <label>推定MQ（据え置き）</label><span id="plan-gen-estmq" class="prodname">—</span>
+      <label for="plan-gen-targetmq">目標MQ</label>
+      <input type="number" id="plan-gen-targetmq" step="10000" style="width:120px;text-align:right;">
+      <label>→ 係数</label><span id="plan-gen-autofactor" class="prodname">—</span>
+    </div>
+    <div class="table-wrap" style="margin-top:10px;">
+      <table id="plan-gen-table">
+        <thead><tr>
+          <th>商品</th><th>会社</th><th>参照(期間計)</th><th>補正ベースライン</th><th>→ 目標Q</th>
+        </tr></thead>
+        <tbody id="plan-gen-body"></tbody>
+      </table>
+    </div>
+    <div class="settings-row" style="margin-top:10px;">
+      <label style="font-weight:400;"><input type="checkbox" id="plan-gen-onlyempty"> 空欄のみ埋める</label>
+      <button type="button" id="plan-gen-run">この条件で仮置き</button>
+      <span class="settings-note" id="plan-gen-msg" style="margin-top:0;"></span>
+    </div>
+    <div class="settings-note">
+      係数を変えても分析側の実績は不変。生成後はグリッドで手チューニングしてください。
+      参照カーブが薄い商品は仏束花全体のカーブで代用します（行の「仏平均」で強制も可）。
+      対象は仏束花6価格帯×4区分（もんとあーる・主婦の店・アオキ・ファンシー全店）。
+      生成は参照カーブを「前倒し○日＋後方ならし○日」で手前へ寄せ（ピークを手前に倒す）、商品×日の合計を50束・会社按分を10束に丸めます。
+      総数は目標Qに寄せますが、50束丸めで±数%ずれます（生成後メッセージに「目標Q比」を表示）。足りない日は手で+してください。
+      ※生成条件（係数・補正ベースライン・目標MQ・前倒し/ならし・生成メモ）もシナリオに保存され、呼び出し時に復元されます（右端「目標Q」列が保存時と一致）。生成メモの入力欄はこのパネルの外（下記・グリッド上部）にあります。
+    </div>
+  </details>
+
+  <div class="settings-row" style="align-items:flex-start;margin:12px 0;">
+    <label for="plan-gen-note" style="font-weight:600;padding-top:4px;">生成メモ</label>
+    <textarea id="plan-gen-note" rows="2" placeholder="なぜこの係数・基礎数字にしたか（例：450/600=2023基準×105% ／ 1000-2000=2025基準×115% ／ 根拠：彼岸3ヶ年総括MD）" style="flex:1;min-width:280px;font-family:inherit;font-size:12px;padding:5px 7px;resize:vertical;border:1px solid var(--gray-200);border-radius:var(--radius-sm);"></textarea>
+  </div>
+
+  <div id="plan-refwarn"></div>
+
+  <div class="cards">
+    <div class="card"><div class="card-label">計画合計</div><div class="card-value" id="plan-c-total">—</div></div>
+    <div class="card"><div class="card-label">参照年合計</div><div class="card-value" id="plan-c-ref">—</div></div>
+    <div class="card"><div class="card-label">達成率（計画÷参照）</div><div class="card-value" id="plan-c-rate">—</div></div>
+    <div class="card"><div class="card-label">ピーク日時点の累積達成率</div><div class="card-value" id="plan-c-peak">—</div></div>
+    <div class="card"><div class="card-label">計画粗利（想定MQ）</div><div class="card-value" id="plan-c-mq-plan">—</div></div>
+    <div class="card"><div class="card-label">参照年粗利（想定MQ）</div><div class="card-value" id="plan-c-mq-ref">—</div></div>
+  </div>
+  <div class="summary-note" style="margin-top:-6px;">
+    粗利（想定MQ）は商品ごとの参照年平均単価×（基準粗利率−委託手数料率）で概算した単価Mに、計画／参照年それぞれの合計数量を掛けて算出（仮置き生成の目標MQと同じ計算方式）。実際のMQとは商品構成・単価変動でずれます。
+  </div>
+
+  <div class="summary-note">
+    セル上段＝参照年の販売実績（卸3社＋ファンシー全店 合算・読み取り専用）／下段＝加工計画（<b>も</b>＝もんとあーる・<b>主</b>＝主婦の店・<b>ア</b>＝アオキ・<b>フ</b>＝ファンシー全店）。
+    計画入力欄の色：<b style="color:var(--red)">赤</b>＝翌日の参照実績に届かない／
+    <b style="color:var(--orange)">橙</b>＝翌々日実績×0.8未満／黄＝翌々日実績×0.9未満／
+    <b style="color:var(--blue)">青</b>＝翌々日実績以上（0.9〜1.0倍は許容帯として無色）。
+    右端の固定2列：「期間計」＝各行の横計（参照計・会社別計）、「目標Q」＝補正ベースライン×係数の狙い値（緑）。両者を見比べて数字を調整できます。定番6価格帯以外は既定で畳んでおり、区切り行クリックで展開できます。
+  </div>
+
+  <div class="table-wrap">
+    <table id="plan-table">
+      <thead><tr id="plan-head-row"><th class="pl-name-col">商品</th></tr></thead>
+      <tbody id="plan-body"></tbody>
+      <tfoot id="plan-foot"></tfoot>
+    </table>
+    <div class="empty-msg" id="plan-empty" style="display:none;"></div>
+  </div>
+</div><!-- /#tab-plan -->
 
 <script>
 const SUPABASE_URL='https://vvyzwwoduaqqamjvoqrp.supabase.co';
@@ -226,19 +415,96 @@ async function sbFetch(path,opts={}){
 }
 function todayISO(){const d=new Date();d.setTime(d.getTime()+9*60*60*1000);return d.toISOString().slice(0,10);}
 
-// ===== 物日マスタ =====
-// 日付は年ごとに実態と多少ずれ得るため、必要に応じてここを直接調整する。
+// ===== 物日マスタ（分析・予定タブ共有） =====
+// 2層構造：物日種別（KIRYUUBI_EVENTS）× 年。md は概算の暦日ルール、年次のズレは KIRYUUBI_OVERRIDES で補正。
+//   start/end     = 売上集計ウィンドウ（分析タブ）
+//   planStart/End = 生産計画ウィンドウ（予定タブ、集計より手前から）
+//   peak          = ピーク日（予定タブの参照カーブ対応づけの基準）
+const KIRYUUBI_EVENTS=[
+  {id:'higan_haru', name:'春彼岸',  md:{start:'03-17',end:'03-23',peak:'03-20',planStart:'03-08',planEnd:'03-24'}},
+  {id:'hahanohi',   name:'母の日',  compute:'secondSunday5'}, // 5月第2日曜（peak=日曜, planStart=日曜-13, planEnd=日曜+1）
+  {id:'bon7',       name:'7月盆',   md:{start:'07-10',end:'07-16',peak:'07-13',planStart:'07-01',planEnd:'07-16'}},
+  {id:'bon8',       name:'8月盆',   md:{start:'08-06',end:'08-15',peak:'08-13',planStart:'08-01',planEnd:'08-16'}},
+  {id:'higan_aki',  name:'9月彼岸', md:{start:'09-19',end:'09-25',peak:'09-22',planStart:'09-08',planEnd:'09-24'}},
+  // 12月年末は正月(1/1〜3)まで跨ぐ。md の月日が start より小さいものは resolveKiryuubi が翌年扱いにする。
+  {id:'nenmatsu',   name:'12月年末',md:{start:'12-27',end:'01-03',peak:'12-31',planStart:'12-18',planEnd:'01-03'}},
+];
+// 実態に合わせた年次上書き（分かっている物だけ。start/end/peak/planStart/planEnd を個別に差し替え可）
+// 注意：peak と planStart は同じ日数だけ動かすこと（予定タブの参照カーブは peak 基準で対応づける）。
+const KIRYUUBI_OVERRIDES={
+  // 2026秋彼岸（予定）：オーナー確認済みの計画ウィンドウを明示固定
+  'higan_aki_2026':{peak:'2026-09-22',planStart:'2026-09-08',planEnd:'2026-09-24'},
+};
+
+// 分析タブの物日プルダウン（従来の KIRYUUBI_MASTER）。id は dashboard_scenarios の period_id を兼ねるので
+// 既存分は値を変えない。event/year タグを付けて2層セレクタから引けるようにした。
 const KIRYUUBI_MASTER=[
-  {id:'obon2025',   name:'お盆2025',   start:'2025-08-06', end:'2025-08-15'},
-  {id:'obon2026',   name:'お盆2026',   start:'2026-08-06', end:'2026-08-15'},
-  {id:'higan_aki2026', name:'秋彼岸2026', start:'2026-09-19', end:'2026-09-25'},
-  {id:'higan_haru2026', name:'春彼岸2026', start:'2026-03-17', end:'2026-03-23'},
-  {id:'hahanohi2026', name:'母の日2026', start:'2026-05-04', end:'2026-05-10'},
-  {id:'shougatsu2025_26', name:'正月2025-26', start:'2025-12-29', end:'2026-01-03'},
+  {id:'obon2025',        event:'bon8',      year:2025, name:'8月盆2025',  start:'2025-08-06', end:'2025-08-15'},
+  {id:'obon2026',        event:'bon8',      year:2026, name:'8月盆2026',  start:'2026-08-06', end:'2026-08-15'},
+  {id:'higan_aki2026',   event:'higan_aki', year:2026, name:'9月彼岸2026', start:'2026-09-19', end:'2026-09-25'},
+  {id:'higan_haru2026',  event:'higan_haru',year:2026, name:'春彼岸2026',  start:'2026-03-17', end:'2026-03-23'},
+  {id:'hahanohi2026',    event:'hahanohi',  year:2026, name:'母の日2026',  start:'2026-05-04', end:'2026-05-10'},
+  {id:'shougatsu2025_26',event:'nenmatsu',  year:2025, name:'12月年末2025',start:'2025-12-29', end:'2026-01-03'},
 ];
 
-// もんとあーるは既存アプリ側で税込金額を保存している（要修正・別途対応予定）。
-// この日付より前のもんとあーるデータは、集計時に÷1.10して税抜に補正する。
+function secondSunday(year,month1){
+  const d=new Date(Date.UTC(year,month1-1,1));
+  const firstSunday=1+((7-d.getUTCDay())%7);
+  return new Date(Date.UTC(year,month1-1,firstSunday+7));
+}
+function isoUTC(d){return d.toISOString().slice(0,10);}
+function addDaysISO(iso,n){
+  const d=new Date(iso+'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate()+n);
+  return isoUTC(d);
+}
+function daysBetweenISO(from,to){
+  return Math.round((Date.parse(to+'T00:00:00Z')-Date.parse(from+'T00:00:00Z'))/86400000);
+}
+function resolveKiryuubi(eventId,year){
+  const ev=KIRYUUBI_EVENTS.find(e=>e.id===eventId);
+  if(!ev)return null;
+  let base;
+  if(ev.compute==='secondSunday5'){
+    const s=isoUTC(secondSunday(year,5));
+    base={start:addDaysISO(s,-6),end:s,peak:s,planStart:addDaysISO(s,-13),planEnd:addDaysISO(s,1)};
+  }else{
+    base={
+      start:year+'-'+ev.md.start,end:year+'-'+ev.md.end,peak:year+'-'+ev.md.peak,
+      planStart:year+'-'+ev.md.planStart,planEnd:year+'-'+ev.md.planEnd,
+    };
+    // 年跨ぎ物日（12月年末）：start より前の月日は翌年に送る
+    const ny=(year+1)+'-';
+    if(base.end<base.start)base.end=ny+ev.md.end;
+    if(base.peak<base.planStart)base.peak=ny+ev.md.peak;
+    if(base.planEnd<base.planStart)base.planEnd=ny+ev.md.planEnd;
+  }
+  const ov=KIRYUUBI_OVERRIDES[eventId+'_'+year]||{};
+  return {
+    id:eventId+'_'+year,eventId,year,name:ev.name+year,
+    start:ov.start||base.start,end:ov.end||base.end,
+    peak_date:ov.peak||base.peak,
+    plan_start:ov.planStart||base.planStart,
+    plan_end:ov.planEnd||base.planEnd,
+  };
+}
+// 分析タブ用：(物日,年) → 集計期間。KIRYUUBI_MASTER に既存行があれば優先（period_id 保持）、無ければ暦日ルールで合成。
+function resolveAnalysisPeriod(eventId,year){
+  const known=KIRYUUBI_MASTER.find(p=>p.event===eventId&&p.year===year);
+  if(known)return known;
+  const r=resolveKiryuubi(eventId,year);
+  if(!r)return null;
+  return {id:r.id,event:eventId,year,name:r.name,start:r.start,end:r.end,synthetic:true};
+}
+function analysisYearOptions(){
+  const ys=new Set(KIRYUUBI_MASTER.map(p=>p.year));
+  const cy=+todayISO().slice(0,4);
+  for(let y=cy-4;y<=cy+1;y++)ys.add(y); // 今年基準で6年（過去4＋今年＋翌年）
+  return [...ys].sort((a,b)=>a-b);
+}
+
+// もんとあーるは 2026-09-01 納品分から hana-delivery-app 側が税抜で保存（commit 0447c5b）。
+// この日付より前のもんとあーるデータは税込保存なので、集計時に÷1.10して税抜へ補正する。
 const MONTOUR_TAX_FIX_DATE='2026-09-01';
 
 // ===== 表示順マスタ（商品区分の並び順・キープフラワーは定番の最後） =====
@@ -277,6 +543,8 @@ function pickDefaultPeriod(){
   return started.reduce((latest,p)=>p.start>latest.start?p:latest,started[0]);
 }
 let currentPeriod=pickDefaultPeriod();
+let analysisEvent=currentPeriod.event;   // 2層セレクタ：物日種別
+let analysisYear=currentPeriod.year;     // 2層セレクタ：年
 let aggRows=[];          // {product_name, category, qty, amount}
 let vSettings={};        // product_name -> {base_margin_rate, actual_v1}（シナリオの一部。既定は白紙）
 let simState={};         // product_name -> {extraQty, extraV}（シナリオの一部。既定は白紙）
@@ -372,20 +640,32 @@ function simIsActive(){
 }
 
 function initPeriodSelect(){
-  const sel=document.getElementById('period-select');
-  KIRYUUBI_MASTER.forEach(p=>{
-    const opt=document.createElement('option');
-    opt.value=p.id;
-    opt.textContent=p.name;
-    sel.appendChild(opt);
+  const ysel=document.getElementById('period-year-select');
+  const esel=document.getElementById('period-event-select');
+  analysisYearOptions().forEach(y=>{
+    const o=document.createElement('option');o.value=String(y);o.textContent=y+'年';
+    ysel.appendChild(o);
   });
-  sel.value=currentPeriod.id;
-  sel.addEventListener('change',()=>{
-    currentPeriod=KIRYUUBI_MASTER.find(p=>p.id===sel.value);
+  KIRYUUBI_EVENTS.forEach(ev=>{
+    const o=document.createElement('option');o.value=ev.id;o.textContent=ev.name;
+    esel.appendChild(o);
+  });
+  if(![...ysel.options].some(o=>o.value===String(analysisYear))){
+    const o=document.createElement('option');o.value=String(analysisYear);o.textContent=analysisYear+'年';
+    ysel.appendChild(o);
+  }
+  ysel.value=String(analysisYear);
+  esel.value=analysisEvent;
+  const onChange=()=>{
+    analysisYear=+ysel.value;
+    analysisEvent=esel.value;
+    currentPeriod=resolveAnalysisPeriod(analysisEvent,analysisYear);
     sortState={mode:'group'};
     resetToBlank();
     loadAndRender();
-  });
+  };
+  ysel.addEventListener('change',onChange);
+  esel.addEventListener('change',onChange);
 }
 
 async function loadAggregates(start,end){
@@ -906,7 +1186,1110 @@ async function loadAndRender(){
   renderTable();
 }
 
+// ======================================================================
+// 予定タブ（加工計画）
+//   物日マスタ・日付ヘルパ（KIRYUUBI_EVENTS / resolveKiryuubi 等）は分析タブと共有。
+//   予定タブは dashboard_scenarios ではなく production_plan_scenarios を使う。
+// ======================================================================
+
+// sales_items.product_name と完全一致で突き合わせる（スペース・全角カンマ含む）。
+// パーサ側の表記が変わるとその価格帯が「その他品目」に落ち、生成ベースラインが0になる点に注意。
+const PLAN_ROW_PRODUCTS=['仏束花 450円','仏束花 600円','仏束花 1,000円','仏束花 1,500円','仏束花 2,000円','仏束花 3,000円'];
+// 計画対象の系列。卸3社・ファンシーともに company_id 一致のみで判定（店舗は絞らない）。
+// ファンシーは本店・エスモール店・パル店の3店舗合計。id は planData / シナリオJSON のキー（互換のため fancy_honten のまま）。
+const PLAN_COMPANIES=[
+  {id:'montour',     companyId:'montour',short:'も',label:'もんとあーる'},
+  {id:'shufu',       companyId:'shufu',  short:'主',label:'主婦の店'},
+  {id:'aoki',        companyId:'aoki',   short:'ア',label:'アオキ'},
+  {id:'fancy_honten',companyId:'fancy',  short:'フ',label:'ファンシー'},
+];
+// sales_records 1件 → 対応する PLAN_COMPANIES エントリ（storeId 指定時は店舗まで一致必須）。無ければ対象外。
+function planCoForRec(rec){
+  return PLAN_COMPANIES.find(c=>c.companyId===rec.company_id&&(!c.storeId||c.storeId===rec.store_id));
+}
+const PLAN_SCN_SQL="CREATE TABLE production_plan_scenarios (id uuid primary key default gen_random_uuid(), period_id text not null, scenario_name text not null, ref_year integer not null, memo text default '', data jsonb not null default '{}', created_at timestamptz default now(), updated_at timestamptz default now(), unique(period_id, scenario_name)); ALTER TABLE production_plan_scenarios DISABLE ROW LEVEL SECURITY;";
+
+let planYear=null;            // 計画対象年
+let planEventId='higan_aki';  // 物日種別
+let planPeriod=null;          // resolveKiryuubi の結果
+let planRefYear=null;         // 比較年
+let planDates=[];             // グリッド日付（plan_start〜plan_end, YYYY-MM-DD, 計画年基準）
+let planRef={};               // planRef[商品名][YYYY-MM-DD(計画年基準)] = {qty, amt, byCo:{系列id:{qty,amt}}}（参照年・卸3社＋ファンシー全店）
+let planRefMeta={};           // 商品名 -> {category}
+let planData={};              // planData[YYYY-MM-DD][商品名][会社id] = 計画数
+let planScnList=[];
+let planScnAvailable=true;
+let planScnId=null;
+let planTabInited=false;
+let planPendingTab=null;      // 入力欄でTab/Enter後の再フォーカス先ヒント
+let planShowExtras=false;     // 定番6価格帯以外（その他品目）の行を表示するか（既定は畳む）
+
+// --- 仮置き生成パネルの状態（シナリオには保存しない。生成結果の planData のみ保存される） ---
+const PLAN_THIN_CURVE_QTY=20; // 参照期間計がこれ未満の商品は日カーブを仏束花合算で代用
+let planGenMode='factor';     // 'factor' | 'mq'
+let planGenBaseFactor=1.20;   // 既定成長係数（手動変更可）
+let planGenMarginRate=null;   // 目標MQモードの基準粗利率（初期は globalMarginRate）
+let planGenTargetMQ=null;
+let planGenBaseline={};        // planGenBaseline[商品][会社id] = 補正値（未設定なら参照期間計）
+let planGenFactorOv={};        // planGenFactorOv[商品] = 係数%（未設定なら既定係数）
+let planGenBlend={};           // planGenBlend[商品] = true で日カーブを仏束花合算に強制
+let planGenLeadDays=3;          // 前倒し（リードタイム）既定値：D日の生産＝D+lead日の需要向け（商品別上書きが無い商品向け）
+let planGenSmoothDays=5;        // ならし既定値：各生産日の量を手前 smooth 日へ均等分散（商品別上書きが無い商品向け）
+// 前倒し/ならしの商品別（価格帯別）上書き既定値。450/600円＝墓需要中心・総数多く天候対応優先で前倒し浅め・ならし広め、
+// 1000円＝仏壇/墓の中間、1500円以上＝洋花中心で日持ち重視・総数少なめのため前倒し深め・ならし狭め（2026-09-04 オーナー確認）。
+const PLAN_GEN_LEAD_DEFAULT={'仏束花 450円':1,'仏束花 600円':1,'仏束花 1,000円':2,'仏束花 1,500円':3,'仏束花 2,000円':3,'仏束花 3,000円':3};
+const PLAN_GEN_SMOOTH_DEFAULT={'仏束花 450円':6,'仏束花 600円':6,'仏束花 1,000円':6,'仏束花 1,500円':3,'仏束花 2,000円':3,'仏束花 3,000円':3};
+let planGenLeadOv={...PLAN_GEN_LEAD_DEFAULT};    // planGenLeadOv[商品] = 前倒し日数上書き（未設定なら planGenLeadDays）
+let planGenSmoothOv={...PLAN_GEN_SMOOTH_DEFAULT};// planGenSmoothOv[商品] = ならし日数上書き（未設定なら planGenSmoothDays）
+let planGenNote='';             // 生成メモ（なぜこの係数・基礎数字にしたか）。__genConfig に保存
+let planGenInited=false;
+
+function planEnumerateDates(start,end){
+  const out=[];let cur=start,guard=0;
+  while(cur<=end&&guard<400){out.push(cur);cur=addDaysISO(cur,1);guard++;}
+  return out;
+}
+function planWeekdayJP(iso){
+  return ['日','月','火','水','木','金','土'][new Date(iso+'T00:00:00Z').getUTCDay()];
+}
+function planCellTotal(date,product){
+  const p=planData[date]&&planData[date][product];
+  if(!p)return 0;
+  return PLAN_COMPANIES.reduce((s,c)=>s+(p[c.id]||0),0);
+}
+function planSetCell(date,product,companyId,val){
+  if(!planData[date])planData[date]={};
+  if(!planData[date][product])planData[date][product]={};
+  planData[date][product][companyId]=val>0?val:0;
+}
+// D+1=翌日の参照実績, D+2=翌々日の参照実績。参照が無ければその条件はスキップ。優先度：赤>橙>黄>青。
+function planAlertClass(date,product){
+  const P=planCellTotal(date,product);
+  const ref=planRef[product]||{};
+  const c1=ref[addDaysISO(date,1)],c2=ref[addDaysISO(date,2)];
+  const R1=c1?c1.qty:null,R2=c2?c2.qty:null;
+  if(R1!=null&&P<R1)return 'pl-alert-red';
+  if(R2!=null){
+    if(P<R2*0.8)return 'pl-alert-orange';
+    if(P<R2*0.9)return 'pl-alert-yellow';
+    if(P>=R2)return 'pl-alert-blue';
+  }
+  return '';
+}
+
+async function loadPlanReference(){
+  planRef={};planRefMeta={};_refTotCache={};
+  if(!planDates.length)return;
+  // 参照年“側”の同一物日を resolveKiryuubi で解決（母の日など可動物日の曜日ズレ・参照年に効く
+  // OVERRIDES も反映）。参照日→グリッド日は「ピーク日からの日数オフセット」で対応づける
+  // ＝ピーク列が必ず一致する。取得範囲もピーク基準で planStart〜planEnd(+2) 相当分。
+  const refPeriod=resolveKiryuubi(planEventId,planRefYear);
+  const daysBeforePeak=daysBetweenISO(planPeriod.plan_start,planPeriod.peak_date);
+  const daysAfterPeak=daysBetweenISO(planPeriod.peak_date,planPeriod.plan_end);
+  const refStart=addDaysISO(refPeriod.peak_date,-daysBeforePeak);
+  const refEnd=addDaysISO(refPeriod.peak_date,daysAfterPeak+2);
+  let rows=[];
+  try{
+    rows=await sbFetch(`/rest/v1/sales_records?select=sales_date,company_id,store_id,sales_items(product_name,category,quantity,amount)&sales_date=gte.${refStart}&sales_date=lte.${refEnd}`);
+  }catch(e){
+    console.warn('参照データ取得に失敗',e);
+    return;
+  }
+  rows.forEach(rec=>{
+    // 計画対象：卸3社（もんとあーる・主婦の店・アオキ）＋ファンシー全店舗（本店・エスモール店・パル店の合計）。
+    const planCo=planCoForRec(rec);
+    if(!planCo)return;
+    // もんとあーるは MONTOUR_TAX_FIX_DATE より前は税込保存 → 金額のみ ÷1.10（数量は不変）
+    const needsTaxFix=rec.company_id==='montour'&&rec.sales_date<MONTOUR_TAX_FIX_DATE;
+    // 参照日 → グリッド日：ピーク日からの日数を保って対応づける（ピーク列が一致）
+    const gridDate=addDaysISO(planPeriod.peak_date,daysBetweenISO(refPeriod.peak_date,rec.sales_date));
+    (rec.sales_items||[]).forEach(it=>{
+      const name=it.product_name;
+      if(!name)return;
+      const qty=it.quantity||0;
+      let amt=it.amount||0;
+      if(needsTaxFix)amt=amt/1.1;
+      if(!planRef[name])planRef[name]={};
+      const cell=planRef[name][gridDate]||(planRef[name][gridDate]={qty:0,amt:0,byCo:{}});
+      cell.qty+=qty;
+      cell.amt+=amt;
+      const cc=cell.byCo[planCo.id]||(cell.byCo[planCo.id]={qty:0,amt:0});
+      cc.qty+=qty;
+      cc.amt+=amt;
+      if(!planRefMeta[name])planRefMeta[name]={category:it.category||'other'};
+    });
+  });
+}
+
+// 参照集計ヘルパ（生成パネル用）。refProductTotal は入れ子ループから多数呼ばれるのでメモ化。
+let _refTotCache={};
+function refProductTotal(product){
+  if(Object.prototype.hasOwnProperty.call(_refTotCache,product))return _refTotCache[product];
+  const by=planRef[product]||{};
+  const v=planDates.reduce((s,d)=>s+(by[d]?by[d].qty:0),0);
+  _refTotCache[product]=v;
+  return v;
+}
+function refProductCoTotal(product,co){
+  const by=planRef[product]||{};
+  return planDates.reduce((s,d)=>{
+    const c=by[d]&&by[d].byCo&&by[d].byCo[co];
+    return s+(c?c.qty:0);
+  },0);
+}
+function refProductAvgPrice(product){
+  const by=planRef[product]||{};
+  let q=0,a=0;
+  planDates.forEach(d=>{if(by[d]){q+=by[d].qty;a+=by[d].amt;}});
+  return q>0?a/q:0;
+}
+
+function planRowProducts(){
+  const main=PLAN_ROW_PRODUCTS.slice();
+  const extras=Object.keys(planRef).filter(n=>PLAN_ROW_PRODUCTS.indexOf(n)===-1);
+  extras.sort((a,b)=>{
+    const ga=groupKey({category:(planRefMeta[a]||{}).category||'other',product_name:a});
+    const gb=groupKey({category:(planRefMeta[b]||{}).category||'other',product_name:b});
+    const gi=GROUP_ORDER.indexOf(ga)-GROUP_ORDER.indexOf(gb);
+    if(gi!==0)return gi;
+    return a.localeCompare(b,'ja');
+  });
+  return {main,extras};
+}
+
+function planMakeInput(date,product,co){
+  const inp=document.createElement('input');
+  inp.type='number';inp.min='0';inp.className='pl-in';
+  const v=(((planData[date]||{})[product]||{})[co.id])||0;
+  inp.value=v?v:'';
+  inp.placeholder='0';
+  inp.title=co.label;
+  const fkey=date+'|'+product+'|'+co.id;
+  inp.dataset.fkey=fkey;
+  const commit=()=>{
+    const nv=parseFloat(inp.value);
+    planSetCell(date,product,co.id,isNaN(nv)?0:nv);
+  };
+  inp.addEventListener('keydown',e=>{
+    // Tab/Enterはブラウザ標準のフォーカス移動に任せると会社→会社の順に飛んでしまう
+    // （DOM順＝日付ごとに会社を縦移動）。preventDefaultで標準移動を止め、
+    // 自前で確定→再描画→planRestoreFocus内のカスタム順（同じ会社のまま日付方向）で再フォーカスする。
+    if(e.key==='Tab'){
+      e.preventDefault();
+      planPendingTab={dir:e.shiftKey?-1:1,key:fkey,ts:Date.now()};
+      commit();renderPlanGrid();
+    }else if(e.key==='Enter'){
+      e.preventDefault();
+      planPendingTab={dir:0,key:fkey,ts:Date.now()};
+      commit();renderPlanGrid();
+    }
+  });
+  inp.addEventListener('change',()=>{
+    commit();renderPlanGrid();
+  });
+  return inp;
+}
+// Tab/Enter移動順：DOM順（日付ごとに会社を縦移動）ではなく、同じ会社のまま日付方向へ横移動する順序に並べ替える。
+// 水曜休みなど会社ごとに前倒し調整する入力フローに合わせた並び（商品の並びはDOM出現順を維持、商品境界はまたいで連続移動）。
+function planRestoreFocus(scope){
+  if(!planPendingTab||Date.now()-planPendingTab.ts>250){planPendingTab=null;return;}
+  const pt=planPendingTab;planPendingTab=null;
+  if(pt.key==null)return;
+  const inputs=[...scope.querySelectorAll('input.pl-in')];
+  const byKey=new Map(inputs.map(el=>[el.dataset.fkey,el]));
+  const products=[];
+  const seen=new Set();
+  inputs.forEach(el=>{
+    const product=el.dataset.fkey.split('|')[1];
+    if(!seen.has(product)){seen.add(product);products.push(product);}
+  });
+  const ordered=[];
+  products.forEach(product=>{
+    PLAN_COMPANIES.forEach(co=>{
+      planDates.forEach(d=>{
+        const el=byKey.get(d+'|'+product+'|'+co.id);
+        if(el)ordered.push(el);
+      });
+    });
+  });
+  const idx=ordered.findIndex(el=>el.dataset.fkey===pt.key);
+  if(idx===-1)return;
+  const target=ordered[idx+pt.dir];
+  if(!target)return;
+  setTimeout(()=>{target.focus();try{target.select();}catch(_){}},0);
+}
+
+// 右端の読み取り専用セル（上段＝商品計、下段＝会社別の数値テキスト）。期間計・目標Q で共用。
+function planSideCell(cls,topVal,perCoVal){
+  const td=document.createElement('td');
+  td.className=cls;
+  const top=document.createElement('div');
+  top.className='pl-ref';
+  top.textContent=topVal>0?fmtNum(topVal):'–';
+  if(!(topVal>0))top.classList.add('pl-ref-none');
+  td.appendChild(top);
+  const planDiv=document.createElement('div');
+  planDiv.className='pl-plan';
+  PLAN_COMPANIES.forEach(co=>{
+    const lab=document.createElement('label');
+    lab.textContent=co.short;
+    const sp=document.createElement('span');
+    sp.className='pl-rowtot';
+    sp.textContent=fmtNum(perCoVal(co));
+    lab.appendChild(sp);
+    planDiv.appendChild(lab);
+  });
+  td.appendChild(planDiv);
+  return td;
+}
+// 期間計（横計）：参照計＋会社別の計画計
+function planRowTotalCell(product){
+  let refSum=0;
+  planDates.forEach(d=>{const rc=(planRef[product]||{})[d];if(rc)refSum+=rc.qty;});
+  return planSideCell('pl-total-col',refSum,co=>{
+    let s=0;planDates.forEach(d=>{s+=(((planData[d]||{})[product]||{})[co.id]||0);});
+    return s;
+  });
+}
+// 目標Q：補正ベースライン（未設定なら参照期間計）×係数を10束単位で切り上げた、生成が狙う値
+function planTargetCell(product){
+  let tot=0;PLAN_COMPANIES.forEach(co=>{tot+=genTargetQ(product,co.id);});
+  return planSideCell('pl-tgt-col',tot,co=>genTargetQ(product,co.id));
+}
+function planRowEl(product,peak){
+  const tr=document.createElement('tr');
+  const tdName=document.createElement('td');
+  tdName.className='pl-name-col';
+  tdName.textContent=product;
+  tr.appendChild(tdName);
+  planDates.forEach(d=>{
+    const td=document.createElement('td');
+    const alert=planAlertClass(d,product);
+    if(alert)td.classList.add(alert);
+    if(d===peak)td.classList.add('pl-peak-col');
+    const ref=(planRef[product]||{})[d];
+    const refDiv=document.createElement('div');
+    refDiv.className='pl-ref';
+    if(ref){
+      refDiv.textContent=fmtNum(ref.qty);
+      refDiv.title='参照年 '+fmtNum(ref.qty)+'束 / '+fmtYen(ref.amt);
+    }else{
+      refDiv.textContent='–';
+      refDiv.classList.add('pl-ref-none');
+    }
+    td.appendChild(refDiv);
+    const planDiv=document.createElement('div');
+    planDiv.className='pl-plan';
+    PLAN_COMPANIES.forEach(co=>{
+      const lab=document.createElement('label');
+      lab.textContent=co.short;
+      lab.appendChild(planMakeInput(d,product,co));
+      planDiv.appendChild(lab);
+    });
+    td.appendChild(planDiv);
+    const totDiv=document.createElement('div');
+    totDiv.className='pl-plan-tot';
+    totDiv.textContent='計 '+fmtNum(planCellTotal(d,product));
+    td.appendChild(totDiv);
+    tr.appendChild(td);
+  });
+  tr.appendChild(planRowTotalCell(product));
+  tr.appendChild(planTargetCell(product));
+  return tr;
+}
+
+function renderPlanGrid(){
+  const tbl=document.getElementById('plan-table');
+  const headRow=document.getElementById('plan-head-row');
+  const body=document.getElementById('plan-body');
+  const foot=document.getElementById('plan-foot');
+  const empty=document.getElementById('plan-empty');
+  if(!tbl)return;
+  updatePlanRefWarn();
+  headRow.innerHTML='<th class="pl-name-col">商品</th>';
+  body.innerHTML='';
+  foot.innerHTML='';
+
+  if(!planPeriod||!planDates.length){
+    tbl.style.display='none';
+    empty.style.display='block';
+    empty.textContent='物日の期間が未設定です。';
+    return;
+  }
+  tbl.style.display='table';
+  empty.style.display='none';
+
+  const peak=planPeriod.peak_date;
+  planDates.forEach(d=>{
+    const th=document.createElement('th');
+    if(d===peak)th.classList.add('pl-peak-col');
+    th.innerHTML=(+d.slice(5,7))+'/'+(+d.slice(8,10))+'<br><span class="pl-wd">'+planWeekdayJP(d)+'</span>';
+    headRow.appendChild(th);
+  });
+  const thTot=document.createElement('th');
+  thTot.className='pl-total-col';
+  thTot.textContent='期間計';
+  headRow.appendChild(thTot);
+  const thTgt=document.createElement('th');
+  thTgt.className='pl-tgt-col';
+  thTgt.textContent='目標Q';
+  headRow.appendChild(thTgt);
+
+  const {main,extras}=planRowProducts();
+  const allRows=main.concat(extras);
+  main.forEach(p=>body.appendChild(planRowEl(p,peak)));
+  if(extras.length){
+    let exPlan=0,exRef=0;
+    extras.forEach(p=>planDates.forEach(d=>{
+      exPlan+=planCellTotal(d,p);
+      const rc=(planRef[p]||{})[d];if(rc)exRef+=rc.qty;
+    }));
+    const sep=document.createElement('tr');
+    sep.className='pl-sep';
+    const td=document.createElement('td');
+    td.colSpan=1+planDates.length+2;
+    td.innerHTML='<span class="pl-sep-toggle">'+(planShowExtras?'▼':'▶')+'</span>その他品目（定番6価格帯以外）'+extras.length+'品目'
+      +'<span class="pl-sep-sub">計画 '+fmtNum(exPlan)+'束 ／ 参照 '+fmtNum(exRef)+'束（クリックで'+(planShowExtras?'畳む':'展開')+'）</span>';
+    td.addEventListener('click',()=>{planShowExtras=!planShowExtras;renderPlanGrid();});
+    sep.appendChild(td);
+    body.appendChild(sep);
+    if(planShowExtras)extras.forEach(p=>body.appendChild(planRowEl(p,peak)));
+  }
+
+  // 日別の計画計・参照計を一度だけ算出（累積行とサマリーで共用）
+  const perDay=planDates.map(d=>{
+    let p=0,r=0;
+    allRows.forEach(prod=>{
+      p+=planCellTotal(d,prod);
+      const rc=(planRef[prod]||{})[d];
+      r+=rc?rc.qty:0;
+    });
+    return {d,p,r};
+  });
+
+  // 粗利（想定MQ）：商品ごとの参照年平均単価P×（基準粗利率−委託手数料率）＝単価M（仮置き生成の genEstMQ と同じ式）に、
+  // 計画／参照年それぞれの商品別合計数量を掛けて合算。
+  const planMR=planGenMarginRate!=null?planGenMarginRate:globalMarginRate;
+  let planMQ=0,refMQ=0;
+  allRows.forEach(prod=>{
+    const P=refProductAvgPrice(prod);
+    if(P<=0)return;
+    const m=P-P*(1-planMR)-P*commissionRate;
+    let qP=0,qR=0;
+    planDates.forEach(d=>{
+      qP+=planCellTotal(d,prod);
+      const rc=(planRef[prod]||{})[d];
+      qR+=rc?rc.qty:0;
+    });
+    planMQ+=m*qP;refMQ+=m*qR;
+  });
+
+  // 全商品 日別計（縦計・非累積）：定番6価格帯＋展開中のその他品目を横断した、その日の計画合計束数
+  const rowDayTot=document.createElement('tr');rowDayTot.className='pl-cum';
+  rowDayTot.innerHTML='<td class="pl-name-col">全品目 日別計</td>';
+  let dayTotSum=0;
+  perDay.forEach(({d,p})=>{
+    dayTotSum+=p;
+    const td=document.createElement('td');td.textContent=fmtNum(p);
+    if(d===peak)td.classList.add('pl-peak-col');
+    rowDayTot.appendChild(td);
+  });
+  rowDayTot.appendChild((()=>{const td=document.createElement('td');td.className='pl-total-col';td.textContent=fmtNum(dayTotSum);return td;})());
+  rowDayTot.appendChild((()=>{const td=document.createElement('td');td.className='pl-tgt-col';td.textContent='';return td;})());
+  foot.appendChild(rowDayTot);
+
+  // 累積行（左から積算）
+  let cumPlan=0,cumRef=0;
+  const rowPlan=document.createElement('tr');rowPlan.className='pl-cum';
+  const rowRef=document.createElement('tr');rowRef.className='pl-cum';
+  const rowDiff=document.createElement('tr');rowDiff.className='pl-cum';
+  rowPlan.innerHTML='<td class="pl-name-col">今年計画 累積</td>';
+  rowRef.innerHTML='<td class="pl-name-col">参照年実績 累積</td>';
+  rowDiff.innerHTML='<td class="pl-name-col">差分</td>';
+  perDay.forEach(({d,p,r})=>{
+    cumPlan+=p;cumRef+=r;
+    const diff=cumPlan-cumRef;
+    const tdP=document.createElement('td');tdP.textContent=fmtNum(cumPlan);
+    const tdR=document.createElement('td');tdR.textContent=fmtNum(cumRef);
+    const tdD=document.createElement('td');tdD.textContent=(diff>=0?'+':'')+fmtNum(diff);
+    if(diff<0)tdD.classList.add('pl-neg');
+    if(d===peak){tdP.classList.add('pl-peak-col');tdR.classList.add('pl-peak-col');tdD.classList.add('pl-peak-col');}
+    rowPlan.appendChild(tdP);rowRef.appendChild(tdR);rowDiff.appendChild(tdD);
+  });
+  // 横計（期間合計）: 累積の最終値と一致
+  const totDiff=cumPlan-cumRef;
+  const mkCell=(cls,txt,neg)=>{const td=document.createElement('td');td.className=cls;td.textContent=txt;if(neg)td.classList.add('pl-neg');return td;};
+  rowPlan.appendChild(mkCell('pl-total-col',fmtNum(cumPlan)));
+  rowRef.appendChild(mkCell('pl-total-col',fmtNum(cumRef)));
+  rowDiff.appendChild(mkCell('pl-total-col',(totDiff>=0?'+':'')+fmtNum(totDiff),totDiff<0));
+  // 目標Q 列（rowPlan のみ総計、他は空欄）
+  let grandTgt=0;
+  allRows.forEach(p=>PLAN_COMPANIES.forEach(co=>{grandTgt+=genTargetQ(p,co.id);}));
+  rowPlan.appendChild(mkCell('pl-tgt-col',fmtNum(grandTgt)));
+  rowRef.appendChild(mkCell('pl-tgt-col',''));
+  rowDiff.appendChild(mkCell('pl-tgt-col',''));
+  foot.appendChild(rowPlan);
+  foot.appendChild(rowRef);
+  foot.appendChild(rowDiff);
+
+  renderPlanSummary(perDay,planMQ,refMQ);
+  planRestoreFocus(body);
+}
+
+function renderPlanSummary(perDay,planMQ,refMQ){
+  const peak=planPeriod.peak_date;
+  const peakInRange=planDates.indexOf(peak)!==-1;
+  let totalPlan=0,totalRef=0,peakCumPlan=0,peakCumRef=0;
+  perDay.forEach(({d,p,r})=>{
+    totalPlan+=p;totalRef+=r;
+    if(peakInRange&&d<=peak){peakCumPlan+=p;peakCumRef+=r;}
+  });
+  const set=(id,txt)=>{const el=document.getElementById(id);if(el)el.textContent=txt;};
+  set('plan-c-total',fmtNum(totalPlan)+' 束');
+  set('plan-c-ref',fmtNum(totalRef)+' 束');
+  set('plan-c-rate',totalRef>0?(totalPlan/totalRef*100).toFixed(1)+'%':'—');
+  set('plan-c-peak',(peakInRange&&peakCumRef>0)?(peakCumPlan/peakCumRef*100).toFixed(1)+'%':'—');
+  set('plan-c-mq-plan',fmtYen(planMQ||0));
+  set('plan-c-mq-ref',fmtYen(refMQ||0));
+}
+
+// ===================== 仮置き生成 =====================
+function genBaselineFor(product,co){
+  const ov=planGenBaseline[product]&&planGenBaseline[product][co];
+  return (ov!=null&&ov!=='')?ov:refProductCoTotal(product,co);
+}
+function genFactorFor(product){
+  if(planGenMode==='mq')return genAutoFactor();
+  const ov=planGenFactorOv[product];
+  return (ov!=null&&ov!=='')?ov/100:planGenBaseFactor;
+}
+// 目標MQ ÷ 推定MQ（据え置き）。参照Pと基準粗利率・委託手数料率から算出。
+function genEstMQ(){
+  const mr=planGenMarginRate!=null?planGenMarginRate:globalMarginRate;
+  let mq=0;
+  PLAN_ROW_PRODUCTS.forEach(p=>{
+    const P=refProductAvgPrice(p);
+    if(P<=0)return;
+    const m=P-P*(1-mr)-P*commissionRate; // = P*(mr - commissionRate)
+    const q=PLAN_COMPANIES.reduce((s,c)=>s+genBaselineFor(p,c.id),0);
+    mq+=m*q;
+  });
+  return mq;
+}
+function genAutoFactor(){
+  const est=genEstMQ();
+  if(!(est>0)||planGenTargetMQ==null||!(planGenTargetMQ>0))return planGenBaseFactor;
+  return planGenTargetMQ/est;
+}
+// 日カーブ：自カーブ（参照が十分）／薄い or 強制時は仏束花合算／参照皆無は均等
+function genDayShare(product,date){
+  const selfTotal=refProductTotal(product);
+  const useBlend=planGenBlend[product]||selfTotal<PLAN_THIN_CURVE_QTY;
+  if(!useBlend&&selfTotal>0){
+    const rc=(planRef[product]||{})[date];
+    return (rc?rc.qty:0)/selfTotal;
+  }
+  let num=0,den=0;
+  PLAN_ROW_PRODUCTS.forEach(p=>{
+    const rc=(planRef[p]||{})[date];
+    num+=rc?rc.qty:0;
+    den+=refProductTotal(p);
+  });
+  if(den>0)return num/den;
+  return planDates.length?1/planDates.length:0;
+}
+function genTargetQ(product,co){
+  // 目標Qは10束単位で加工するため、1の位を切り上げて10の倍数に丸める（ベースライン0なら0のまま）。
+  const raw=genBaselineFor(product,co)*genFactorFor(product);
+  return raw>0?Math.ceil(raw/10)*10:0;
+}
+// 前倒し(lead)＋後方ならし(smooth)を掛けた日別生産シェア。planDates と同じ並びで返し、合計1に正規化。
+//  1) 需要を lead 日ぶん手前の生産日へ寄せる（D日の生産＝D+lead日の需要向け）
+//  2) 各生産日の量を「手前 smooth 日」へ均等分散（ピークを手前へ倒してなだらかにする）
+//  3) 窓外へこぼれた分を差し引いて合計1へ再正規化 → Σ(会社別目標Q×シェア) が目標Qに一致
+function genProductCurve(product){
+  const N=planDates.length;
+  const lov=planGenLeadOv[product];
+  const sov=planGenSmoothOv[product];
+  const lead=Math.max(0,(lov!=null&&lov!=='')?(lov|0):(planGenLeadDays|0));
+  const smooth=Math.max(1,(sov!=null&&sov!=='')?(sov|0):(planGenSmoothDays|0));
+  const base=planDates.map(d=>genDayShare(product,d));
+  const shifted=new Array(N).fill(0);
+  for(let i=0;i<N;i++){const src=i+lead;if(src<N)shifted[i]=base[src];}
+  const spread=new Array(N).fill(0);
+  for(let i=0;i<N;i++){
+    if(shifted[i]<=0)continue;
+    const per=shifted[i]/smooth;
+    for(let k=0;k<smooth;k++){const j=i-k;if(j>=0)spread[j]+=per;}
+  }
+  const sum=spread.reduce((s,v)=>s+v,0);
+  if(sum>0)for(let i=0;i<N;i++)spread[i]/=sum;
+  return spread;
+}
+
+function renderGenTable(){
+  const body=document.getElementById('plan-gen-body');
+  if(!body)return;
+  body.innerHTML='';
+  const mqMode=planGenMode==='mq';
+  PLAN_ROW_PRODUCTS.forEach(product=>{
+    PLAN_COMPANIES.forEach((co,ci)=>{
+      const tr=document.createElement('tr');
+      if(ci===0){
+        const tdName=document.createElement('td');
+        tdName.className='pl-gen-prodcell';
+        tdName.rowSpan=PLAN_COMPANIES.length;
+        tdName.appendChild(document.createTextNode(product));
+        const sub=document.createElement('span');
+        sub.className='pl-gen-sub';
+        const fLab=document.createElement('label');
+        fLab.textContent='係数 ';
+        const fInp=document.createElement('input');
+        fInp.type='number';fInp.step='5';fInp.className='pl-gen-factor';
+        fInp.value=planGenFactorOv[product]!=null?planGenFactorOv[product]:'';
+        fInp.placeholder=(planGenBaseFactor*100).toFixed(0);
+        fInp.disabled=mqMode;
+        fInp.title='この商品の成長係数%（空欄なら既定係数）';
+        fInp.addEventListener('change',()=>{
+          const v=parseFloat(fInp.value);
+          if(isNaN(v)||v<=0)delete planGenFactorOv[product];else planGenFactorOv[product]=v;
+          refreshGenTargets();
+        });
+        fLab.appendChild(fInp);
+        const pct=document.createElement('span');pct.textContent=' %';
+        fLab.appendChild(pct);
+        sub.appendChild(fLab);
+        const ldLab=document.createElement('label');
+        ldLab.style.marginLeft='8px';
+        ldLab.textContent='前倒し ';
+        const ldInp=document.createElement('input');
+        ldInp.type='number';ldInp.min='0';ldInp.step='1';ldInp.className='pl-gen-lead';
+        ldInp.value=planGenLeadOv[product]!=null?planGenLeadOv[product]:'';
+        ldInp.placeholder=planGenLeadDays;
+        ldInp.title='この商品の前倒し日数上書き（空欄なら既定値）';
+        ldInp.addEventListener('change',()=>{
+          const v=parseInt(ldInp.value,10);
+          if(isNaN(v)||v<0)delete planGenLeadOv[product];else planGenLeadOv[product]=v;
+        });
+        ldLab.appendChild(ldInp);
+        ldLab.appendChild(document.createTextNode('日'));
+        sub.appendChild(ldLab);
+        const smLab=document.createElement('label');
+        smLab.style.marginLeft='8px';
+        smLab.textContent='ならし ';
+        const smInp=document.createElement('input');
+        smInp.type='number';smInp.min='1';smInp.step='1';smInp.className='pl-gen-smooth';
+        smInp.value=planGenSmoothOv[product]!=null?planGenSmoothOv[product]:'';
+        smInp.placeholder=planGenSmoothDays;
+        smInp.title='この商品のならし日数上書き（空欄なら既定値）';
+        smInp.addEventListener('change',()=>{
+          const v=parseInt(smInp.value,10);
+          if(isNaN(v)||v<1)delete planGenSmoothOv[product];else planGenSmoothOv[product]=v;
+        });
+        smLab.appendChild(smInp);
+        smLab.appendChild(document.createTextNode('日'));
+        sub.appendChild(smLab);
+        const bLab=document.createElement('label');
+        bLab.style.marginLeft='8px';
+        const bChk=document.createElement('input');
+        bChk.type='checkbox';bChk.checked=!!planGenBlend[product];
+        bChk.title='日別カーブを仏束花全体の平均カーブで代用';
+        bChk.addEventListener('change',()=>{
+          if(bChk.checked)planGenBlend[product]=true;else delete planGenBlend[product];
+        });
+        bLab.appendChild(bChk);
+        bLab.appendChild(document.createTextNode(' 仏平均'));
+        sub.appendChild(bLab);
+        tdName.appendChild(sub);
+        tr.appendChild(tdName);
+      }
+      const tdCo=document.createElement('td');tdCo.textContent=co.label;tr.appendChild(tdCo);
+      const tdRef=document.createElement('td');tdRef.textContent=fmtNum(refProductCoTotal(product,co.id));tr.appendChild(tdRef);
+      const tdBase=document.createElement('td');
+      const baseInp=document.createElement('input');
+      baseInp.type='number';baseInp.min='0';
+      const bov=planGenBaseline[product]&&planGenBaseline[product][co.id];
+      baseInp.value=(bov!=null&&bov!=='')?bov:'';
+      baseInp.placeholder=fmtNum(refProductCoTotal(product,co.id));
+      baseInp.title='補正ベースライン（空欄なら参照期間計を使用）';
+      baseInp.addEventListener('change',()=>{
+        const v=parseFloat(baseInp.value);
+        if(!planGenBaseline[product])planGenBaseline[product]={};
+        if(isNaN(v)||v<0)delete planGenBaseline[product][co.id];else planGenBaseline[product][co.id]=v;
+        refreshGenTargets();
+      });
+      tdBase.appendChild(baseInp);
+      tr.appendChild(tdBase);
+      const tdTgt=document.createElement('td');
+      tdTgt.className='pl-gen-target';
+      tdTgt.dataset.k=product+'|'+co.id;
+      tdTgt.textContent=fmtNum(genTargetQ(product,co.id));
+      tr.appendChild(tdTgt);
+      body.appendChild(tr);
+    });
+  });
+  updateGenMQUI();
+}
+
+// 入力途中の再描画でフォーカスが飛ばないよう、→目標Q 列と推定MQ だけ更新する
+function refreshGenTargets(){
+  const body=document.getElementById('plan-gen-body');
+  if(!body)return;
+  body.querySelectorAll('td.pl-gen-target').forEach(td=>{
+    const parts=(td.dataset.k||'').split('|');
+    td.textContent=fmtNum(genTargetQ(parts[0],parts[1]));
+  });
+  updateGenMQUI();
+}
+
+function updateGenMQUI(){
+  const row=document.getElementById('plan-gen-mq-row');
+  if(row)row.style.display=planGenMode==='mq'?'flex':'none';
+  // 基準粗利率が未編集なら基礎設定に追従（DB読み込みが後から来ても表示を合わせる）
+  const mg=document.getElementById('plan-gen-margin');
+  if(mg&&planGenMarginRate==null&&document.activeElement!==mg)mg.value=(globalMarginRate*100).toFixed(1);
+  const est=genEstMQ();
+  const estEl=document.getElementById('plan-gen-estmq');
+  if(estEl)estEl.textContent=fmtYen(est);
+  const afEl=document.getElementById('plan-gen-autofactor');
+  if(afEl)afEl.textContent=(genAutoFactor()*100).toFixed(1)+'%';
+}
+
+function planGenerate(){
+  const onlyEmpty=document.getElementById('plan-gen-onlyempty').checked;
+  const msg=document.getElementById('plan-gen-msg');
+  if(!planDates.length){if(msg)msg.textContent='期間が未設定です';return;}
+  if(!onlyEmpty&&!confirm('現在のグリッド入力を生成値で上書きします。よろしいですか？'))return;
+  const N=planDates.length;
+  let filled=0;
+  PLAN_ROW_PRODUCTS.forEach(product=>{
+    const curve=genProductCurve(product);
+    const tq={};let tqSum=0;
+    PLAN_COMPANIES.forEach(co=>{tq[co.id]=genTargetQ(product,co.id);tqSum+=tq[co.id];});
+    for(let i=0;i<N;i++){
+      const d=planDates[i];
+      // 「空欄のみ」＝商品×日でどの会社にも値が無い日だけ埋める（商品合計＝50束単位を保つため日単位で判定）
+      if(onlyEmpty&&PLAN_COMPANIES.some(co=>(((planData[d]||{})[product]||{})[co.id]||0)>0))continue;
+      filled++;
+      // 会社別の生の目標 → 商品×日の合計を50束単位へ
+      const raw={};let rawSum=0;
+      PLAN_COMPANIES.forEach(co=>{const v=tq[co.id]*curve[i];raw[co.id]=v;rawSum+=v;});
+      const total50=Math.round(rawSum/50)*50;
+      if(total50<=0){PLAN_COMPANIES.forEach(co=>planSetCell(d,product,co.id,0));continue;}
+      // 50束を会社へ按分 → 各社10束単位、端数（10の倍数）は最大社へ寄せて合計＝total50を維持
+      let acc=0,maxCo=null,maxW=-1;const out={};
+      PLAN_COMPANIES.forEach(co=>{
+        const w=rawSum>0?raw[co.id]:(tqSum>0?tq[co.id]:0);
+        const share=rawSum>0?w/rawSum:(tqSum>0?tq[co.id]/tqSum:0);
+        const v=Math.round(total50*share/10)*10;
+        out[co.id]=v;acc+=v;
+        if(w>maxW){maxW=w;maxCo=co.id;}
+      });
+      if(maxCo!=null){out[maxCo]+=total50-acc;if(out[maxCo]<0)out[maxCo]=0;}
+      PLAN_COMPANIES.forEach(co=>planSetCell(d,product,co.id,out[co.id]));
+    }
+  });
+  renderPlanGrid();
+  // 生成後サマリ：色内訳＋目標Q比
+  const cnt={red:0,orange:0,yellow:0,blue:0};
+  PLAN_ROW_PRODUCTS.forEach(p=>planDates.forEach(d=>{
+    const c=planAlertClass(d,p);
+    if(c==='pl-alert-red')cnt.red++;else if(c==='pl-alert-orange')cnt.orange++;
+    else if(c==='pl-alert-yellow')cnt.yellow++;else if(c==='pl-alert-blue')cnt.blue++;
+  }));
+  let planTot=0,tgtTot=0;
+  PLAN_ROW_PRODUCTS.forEach(p=>PLAN_COMPANIES.forEach(co=>{
+    tgtTot+=genTargetQ(p,co.id);
+    planDates.forEach(d=>{planTot+=(((planData[d]||{})[p]||{})[co.id]||0);});
+  }));
+  const pct=tgtTot>0?(planTot/tgtTot-1)*100:0;
+  if(msg)msg.textContent=`仮置き完了：計画合計 ${fmtNum(planTot)}束（目標Q比 ${pct>=0?'+':''}${pct.toFixed(1)}%）｜青${cnt.blue}・黄${cnt.yellow}・橙${cnt.orange}・赤${cnt.red}${onlyEmpty?`｜空欄セル ${filled}/${PLAN_ROW_PRODUCTS.length*N} を補充`:''}`;
+}
+
+function initGenPanel(){
+  if(planGenInited)return;
+  planGenInited=true;
+  const bf=document.getElementById('plan-gen-basefactor');
+  bf.value=(planGenBaseFactor*100).toFixed(0);
+  bf.addEventListener('change',()=>{
+    const v=parseFloat(bf.value);
+    planGenBaseFactor=(isNaN(v)||v<=0)?1:v/100;
+    renderGenTable();
+  });
+  const mg=document.getElementById('plan-gen-margin');
+  // planGenMarginRate は null のまま＝基礎設定(globalMarginRate)に追従。ユーザーが編集したら固定。
+  mg.value=(globalMarginRate*100).toFixed(1);
+  mg.addEventListener('change',()=>{
+    const v=parseFloat(mg.value);
+    planGenMarginRate=isNaN(v)?0:v/100;
+    renderGenTable();
+  });
+  const tm=document.getElementById('plan-gen-targetmq');
+  tm.addEventListener('change',()=>{
+    const v=parseFloat(tm.value);
+    planGenTargetMQ=isNaN(v)?null:v;
+    renderGenTable();
+  });
+  [...document.querySelectorAll('input[name="plan-gen-mode"]')].forEach(r=>{
+    r.addEventListener('change',()=>{
+      if(r.checked){planGenMode=r.value;renderGenTable();}
+    });
+  });
+  const ld=document.getElementById('plan-gen-lead');
+  ld.value=planGenLeadDays;
+  ld.addEventListener('change',()=>{
+    const v=parseInt(ld.value,10);
+    planGenLeadDays=(isNaN(v)||v<0)?0:v;
+    ld.value=planGenLeadDays;
+  });
+  const sm=document.getElementById('plan-gen-smooth');
+  sm.value=planGenSmoothDays;
+  sm.addEventListener('change',()=>{
+    const v=parseInt(sm.value,10);
+    planGenSmoothDays=(isNaN(v)||v<1)?1:v;
+    sm.value=planGenSmoothDays;
+  });
+  const nt=document.getElementById('plan-gen-note');
+  nt.value=planGenNote;
+  nt.addEventListener('input',()=>{planGenNote=nt.value;});
+  document.getElementById('plan-gen-run').addEventListener('click',planGenerate);
+}
+
+async function loadPlanScnList(){
+  try{
+    planScnList=await sbFetch(`/rest/v1/production_plan_scenarios?period_id=eq.${planPeriod.id}&select=id,scenario_name,ref_year,memo,data&order=scenario_name.asc`);
+    planScnAvailable=true;
+  }catch(e){
+    planScnList=[];
+    planScnAvailable=false;
+  }
+  renderPlanScnSelect();
+  togglePlanScnBanner();
+}
+function togglePlanScnBanner(){
+  const b=document.getElementById('plan-scn-banner');
+  if(!planScnAvailable){
+    b.classList.add('show');
+    document.getElementById('plan-scn-sql').textContent=PLAN_SCN_SQL;
+  }else{
+    b.classList.remove('show');
+  }
+}
+function renderPlanScnSelect(){
+  const sel=document.getElementById('plan-scn-select');
+  sel.innerHTML='';
+  const blank=document.createElement('option');
+  blank.value='';blank.textContent='（白紙）';
+  sel.appendChild(blank);
+  planScnList.forEach(s=>{
+    const o=document.createElement('option');
+    o.value=s.id;o.textContent=s.scenario_name;
+    sel.appendChild(o);
+  });
+  sel.value=planScnId||'';
+}
+function setPlanScnMsg(m){document.getElementById('plan-scn-msg').textContent=m;}
+
+function resetPlanToBlank(){
+  planData={};
+  planScnId=null;
+  const sel=document.getElementById('plan-scn-select');if(sel)sel.value='';
+  const nm=document.getElementById('plan-scn-name');if(nm)nm.value='';
+  const mm=document.getElementById('plan-scn-memo');if(mm)mm.value='';
+  setPlanScnMsg('');
+  resetGenAll();
+  if(document.getElementById('plan-gen-body'))renderGenTable();
+  renderPlanGrid();
+}
+
+async function applyPlanScn(id){
+  const s=planScnList.find(x=>x.id===id);
+  if(!s)return;
+  planData={};
+  const data=s.data||{};
+  const gc=data.__genConfig;
+  Object.entries(data).forEach(([d,prods])=>{
+    if(d==='__genConfig')return; // 予約キー（生成条件）はグリッドではない
+    Object.entries(prods||{}).forEach(([p,cos])=>{
+      Object.entries(cos||{}).forEach(([cid,val])=>{
+        if(val>0)planSetCell(d,p,cid,val);
+      });
+    });
+  });
+  planScnId=s.id;
+  document.getElementById('plan-scn-name').value=s.scenario_name;
+  document.getElementById('plan-scn-memo').value=s.memo||'';
+  setPlanScnMsg('');
+  if(s.ref_year&&s.ref_year!==planRefYear){
+    planRefYear=s.ref_year;
+    const ry=document.getElementById('plan-refyear-select');
+    if(ry){
+      // 保存時の比較年が現在の選択肢に無ければ option を足して選択状態と実データを一致させる
+      if(![...ry.options].some(o=>o.value===String(planRefYear))){
+        const o=document.createElement('option');
+        o.value=String(planRefYear);o.textContent=planRefYear+'年';
+        ry.appendChild(o);
+      }
+      ry.value=String(planRefYear);
+    }
+    await loadPlanReference();
+  }
+  // 生成条件：シナリオに保存されていれば復元（目標Q列が保存時と一致する）、無ければ既定へ戻す。
+  if(gc&&typeof gc==='object')applyGenConfig(gc);
+  else resetGenAll();
+  renderGenTable();
+  renderPlanGrid();
+}
+
+// 生成パネルの期間依存の入力（補正ベースライン・目標MQ）をクリア
+function resetGenOverrides(){
+  planGenBaseline={};
+  planGenTargetMQ=null;
+  const tmEl=document.getElementById('plan-gen-targetmq');
+  if(tmEl)tmEl.value='';
+}
+// 生成条件をすべて既定へ（白紙／生成条件が保存されていない旧シナリオ用）
+function resetGenAll(){
+  planGenMode='factor';
+  planGenBaseFactor=1.20;
+  planGenMarginRate=null;
+  planGenTargetMQ=null;
+  planGenBaseline={};
+  planGenFactorOv={};
+  planGenBlend={};
+  planGenLeadDays=3;
+  planGenSmoothDays=5;
+  planGenLeadOv={...PLAN_GEN_LEAD_DEFAULT};
+  planGenSmoothOv={...PLAN_GEN_SMOOTH_DEFAULT};
+  planGenNote='';
+  syncGenPanelInputs();
+}
+// 現在の生成条件（シナリオ data.__genConfig に保存する内容）
+function currentGenConfig(){
+  return {
+    mode:planGenMode,baseFactor:planGenBaseFactor,
+    marginRate:planGenMarginRate,targetMQ:planGenTargetMQ,
+    baseline:planGenBaseline,factorOv:planGenFactorOv,blend:planGenBlend,
+    lead:planGenLeadDays,smooth:planGenSmoothDays,
+    leadOv:planGenLeadOv,smoothOv:planGenSmoothOv,note:planGenNote,
+  };
+}
+// data.__genConfig からの復元
+function applyGenConfig(gc){
+  planGenMode=(gc.mode==='mq')?'mq':'factor';
+  planGenBaseFactor=(typeof gc.baseFactor==='number'&&gc.baseFactor>0)?gc.baseFactor:1.20;
+  planGenMarginRate=(typeof gc.marginRate==='number')?gc.marginRate:null;
+  planGenTargetMQ=(typeof gc.targetMQ==='number'&&gc.targetMQ>0)?gc.targetMQ:null;
+  planGenBaseline=(gc.baseline&&typeof gc.baseline==='object')?gc.baseline:{};
+  planGenFactorOv=(gc.factorOv&&typeof gc.factorOv==='object')?gc.factorOv:{};
+  planGenBlend=(gc.blend&&typeof gc.blend==='object')?gc.blend:{};
+  planGenLeadDays=(Number.isFinite(gc.lead)&&gc.lead>=0)?gc.lead:3;
+  planGenSmoothDays=(Number.isFinite(gc.smooth)&&gc.smooth>=1)?gc.smooth:5;
+  // 旧シナリオ（leadOv/smoothOv未保存）は価格帯別の既定値へフォールバック
+  planGenLeadOv=(gc.leadOv&&typeof gc.leadOv==='object')?gc.leadOv:{...PLAN_GEN_LEAD_DEFAULT};
+  planGenSmoothOv=(gc.smoothOv&&typeof gc.smoothOv==='object')?gc.smoothOv:{...PLAN_GEN_SMOOTH_DEFAULT};
+  planGenNote=(typeof gc.note==='string')?gc.note:'';
+  syncGenPanelInputs();
+}
+// 生成パネルの入力欄（テーブル外）を現在の変数値に合わせる
+function syncGenPanelInputs(){
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;};
+  set('plan-gen-basefactor',(planGenBaseFactor*100).toFixed(0));
+  set('plan-gen-margin',((planGenMarginRate!=null?planGenMarginRate:globalMarginRate)*100).toFixed(1));
+  set('plan-gen-lead',planGenLeadDays);
+  set('plan-gen-smooth',planGenSmoothDays);
+  const tm=document.getElementById('plan-gen-targetmq');
+  if(tm)tm.value=planGenTargetMQ!=null?planGenTargetMQ:'';
+  const nt=document.getElementById('plan-gen-note');
+  if(nt)nt.value=planGenNote;
+  document.querySelectorAll('input[name="plan-gen-mode"]').forEach(r=>{r.checked=(r.value===planGenMode);});
+}
+
+async function savePlanScn(){
+  const name=document.getElementById('plan-scn-name').value.trim();
+  if(!name){setPlanScnMsg('シナリオ名を入力してください');return;}
+  if(!planScnAvailable){setPlanScnMsg('保存先テーブルが未作成のため保存できません');return;}
+  const memo=document.getElementById('plan-scn-memo').value.trim();
+  const data={};
+  Object.keys(planData).forEach(d=>{
+    Object.keys(planData[d]).forEach(p=>{
+      Object.keys(planData[d][p]).forEach(cid=>{
+        const val=planData[d][p][cid];
+        if(val>0){
+          if(!data[d])data[d]={};
+          if(!data[d][p])data[d][p]={};
+          data[d][p][cid]=val;
+        }
+      });
+    });
+  });
+  // 生成条件（係数・補正ベースライン・目標MQ・前倒し/ならし）も保存 → 呼び出し時に目標Q列が保存時と一致する
+  data.__genConfig=currentGenConfig();
+  try{
+    const res=await sbFetch(`/rest/v1/production_plan_scenarios?on_conflict=period_id,scenario_name`,{
+      method:'POST',
+      headers:{'Prefer':'resolution=merge-duplicates,return=representation'},
+      body:JSON.stringify([{period_id:planPeriod.id,scenario_name:name,ref_year:planRefYear,memo,data,updated_at:new Date().toISOString()}])
+    });
+    if(res&&res[0])planScnId=res[0].id;
+    await loadPlanScnList();
+    setPlanScnMsg(`「${name}」として保存しました`);
+  }catch(e){
+    setPlanScnMsg('保存に失敗しました');
+    console.warn(e);
+  }
+}
+
+async function deletePlanScn(){
+  const sel=document.getElementById('plan-scn-select');
+  const id=sel.value;
+  if(!id){setPlanScnMsg('削除するシナリオを選択してください');return;}
+  const s=planScnList.find(x=>x.id===id);
+  if(!s)return;
+  if(!confirm(`シナリオ「${s.scenario_name}」を削除します。よろしいですか？`))return;
+  try{
+    await sbFetch(`/rest/v1/production_plan_scenarios?id=eq.${id}`,{method:'DELETE',headers:{'Prefer':'return=minimal'}});
+    resetPlanToBlank();
+    await loadPlanScnList();
+    setPlanScnMsg('削除しました');
+  }catch(e){
+    setPlanScnMsg('削除に失敗しました');
+  }
+}
+
+function planDefaultEvent(){
+  const today=todayISO();
+  const y=+today.slice(0,4);
+  const cands=[];
+  for(const yr of [y-1,y,y+1]){
+    for(const ev of KIRYUUBI_EVENTS){
+      const r=resolveKiryuubi(ev.id,yr);
+      cands.push({eventId:ev.id,year:yr,ps:r.plan_start,pe:r.plan_end});
+    }
+  }
+  // 進行中（plan_start〜plan_end に今日が入る）を最優先、無ければ今日以降で最も近い plan_start
+  const active=cands.find(c=>c.ps<=today&&today<=c.pe);
+  if(active)return {eventId:active.eventId,year:active.year};
+  const upcoming=cands.filter(c=>c.ps>today).sort((a,b)=>a.ps<b.ps?-1:1)[0];
+  if(upcoming)return {eventId:upcoming.eventId,year:upcoming.year};
+  return {eventId:KIRYUUBI_EVENTS[0].id,year:y};
+}
+
+function initPlanControls(){
+  const d=planDefaultEvent();
+  planYear=d.year;
+  planEventId=d.eventId;
+
+  const ysel=document.getElementById('plan-year-select');
+  const baseY=+todayISO().slice(0,4);
+  for(let yy=baseY-2;yy<=baseY+1;yy++){
+    const o=document.createElement('option');
+    o.value=String(yy);o.textContent=yy+'年';
+    ysel.appendChild(o);
+  }
+  if(![...ysel.options].some(o=>o.value===String(planYear))){
+    const o=document.createElement('option');o.value=String(planYear);o.textContent=planYear+'年';
+    ysel.appendChild(o);
+  }
+  ysel.value=String(planYear);
+
+  const esel=document.getElementById('plan-event-select');
+  KIRYUUBI_EVENTS.forEach(ev=>{
+    const o=document.createElement('option');
+    o.value=ev.id;o.textContent=ev.name;
+    esel.appendChild(o);
+  });
+  esel.value=planEventId;
+
+  const rsel=document.getElementById('plan-refyear-select');
+  function syncRefYearOptions(){
+    rsel.innerHTML='';
+    [planYear-1,planYear-2].forEach(ry=>{
+      const o=document.createElement('option');
+      o.value=String(ry);o.textContent=ry+'年';
+      rsel.appendChild(o);
+    });
+    if(!planRefYear||[planYear-1,planYear-2].indexOf(planRefYear)===-1)planRefYear=planYear-1;
+    rsel.value=String(planRefYear);
+  }
+  syncRefYearOptions();
+
+  ysel.addEventListener('change',()=>{
+    planYear=+ysel.value;
+    syncRefYearOptions();
+    resetPlanToBlank();
+    loadPlanAndRender();
+  });
+  esel.addEventListener('change',()=>{
+    planEventId=esel.value;
+    resetPlanToBlank();
+    loadPlanAndRender();
+  });
+  rsel.addEventListener('change',()=>{
+    planRefYear=+rsel.value;
+    loadPlanAndRender();
+  });
+
+  document.getElementById('plan-scn-select').addEventListener('change',e=>{
+    const id=e.target.value;
+    if(!id)resetPlanToBlank();else applyPlanScn(id);
+  });
+  document.getElementById('plan-scn-reset').addEventListener('click',resetPlanToBlank);
+  document.getElementById('plan-scn-save').addEventListener('click',savePlanScn);
+  document.getElementById('plan-scn-delete').addEventListener('click',deletePlanScn);
+
+  initGenPanel();
+}
+
+async function loadPlanAndRender(){
+  planPeriod=resolveKiryuubi(planEventId,planYear);
+  planDates=planEnumerateDates(planPeriod.plan_start,planPeriod.plan_end);
+  const rangeEl=document.getElementById('plan-period-range');
+  if(rangeEl)rangeEl.textContent=`計画 ${planPeriod.plan_start}〜${planPeriod.plan_end}（ピーク ${planPeriod.peak_date}）／比較 ${planRefYear}年`;
+  // 参照データとシナリオ一覧は独立なので並列取得
+  await Promise.all([loadPlanReference(),loadPlanScnList()]);
+  // 補正ベースライン・目標MQは参照データ／期間に依存するので期間・比較年が変わったらリセット
+  resetGenOverrides();
+  renderGenTable();
+  renderPlanGrid();
+}
+
+// 参照データ有無バナー。renderPlanGrid から毎回呼ぶ（シナリオ呼び出しで比較年が変わった場合も追従）。
+function updatePlanRefWarn(){
+  const warn=document.getElementById('plan-refwarn');
+  if(!warn)return;
+  const anyRef=Object.keys(planRef).length>0;
+  warn.style.display=anyRef?'none':'block';
+  warn.textContent=anyRef?'':`※ 比較年 ${planRefYear} のこの期間に販売実績データが見つかりません（色アラート・累積比較は表示されません）。`;
+}
+
+let planControlsInited=false;
+async function initPlanTab(){
+  if(planTabInited)return;
+  if(!planControlsInited){initPlanControls();planControlsInited=true;}
+  try{
+    await loadPlanAndRender();
+    planTabInited=true;
+  }catch(e){
+    console.warn('予定タブの初期化に失敗しました。タブを開き直すと再試行します',e);
+  }
+}
+
+function initTabs(){
+  const btns=[...document.querySelectorAll('.tab-btn')];
+  const panes={analysis:document.getElementById('tab-analysis'),plan:document.getElementById('tab-plan')};
+  btns.forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const t=btn.dataset.tab;
+      btns.forEach(b=>b.classList.toggle('active',b===btn));
+      Object.keys(panes).forEach(k=>panes[k]&&panes[k].classList.toggle('active',k===t));
+      if(t==='plan')initPlanTab();
+    });
+  });
+}
+
 async function init(){
+  initTabs();
   initSettingsPanel();
   initPeriodSelect();
   initSortHeaders();
