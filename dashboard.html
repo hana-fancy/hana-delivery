@@ -142,6 +142,25 @@ tr.pl-cum td.pl-neg{color:var(--red);}
 .pl-gen-prodcell{font-weight:600;}
 .pl-gen-prodcell .pl-gen-sub{display:block;font-weight:400;font-size:10px;color:var(--gray-600);margin-top:3px;}
 
+/* ===== 残高タブ ===== */
+#bal-table{min-width:0;max-width:960px;}
+#bal-table th.bal-tgt-col,#bal-table td.bal-tgt-col{border-left:2px solid var(--gray-200);}
+#bal-table td.bal-none{color:var(--gray-400);}
+#bal-table th:first-child,#bal-table td:first-child{min-width:240px;}
+#bal-table tbody tr.bal-prod td{font-weight:700;color:var(--gray-900);background:var(--gray-50);border-top:1px solid var(--gray-200);}
+#bal-table tbody tr.bal-prod td:first-child{background:var(--gray-50);}
+#bal-table tbody tr.bal-co td{font-weight:400;color:var(--gray-600);font-size:12px;}
+#bal-table tbody tr.bal-co td:first-child{padding-left:26px;}
+#bal-table tbody tr.bal-total td{font-weight:700;background:var(--gray-800);color:var(--white);}
+#bal-table tbody tr.bal-total td:first-child{background:var(--gray-800);}
+#bal-table td.bal-neg{color:var(--red);}
+#bal-table tbody tr.bal-total td.bal-neg{color:#ff9d92;}
+.bal-note{font-size:11.5px;color:var(--gray-400);line-height:1.7;margin-top:12px;}
+.bal-status{font-size:12px;color:var(--gray-400);}
+.bal-run{font-family:inherit;font-size:13px;font-weight:700;padding:6px 18px;border:1.5px solid var(--green);background:var(--white);color:var(--green);border-radius:var(--radius-sm);cursor:pointer;}
+.bal-run:hover{background:var(--green-pale);}
+.bal-run:disabled{opacity:.5;cursor:not-allowed;}
+
 @media print{
   body{padding:0;background:#fff;}
   .toolbar,#scenario-panel,.banner,.col-toggle,.reset-sort{display:none!important;}
@@ -162,12 +181,13 @@ tr.pl-cum td.pl-neg{color:var(--red);}
 
 <div class="header">
   <div class="title">経営ダッシュボード</div>
-  <div class="subtitle">v0.1 — スーパー卸（分析・予定）</div>
+  <div class="subtitle">v0.1 — スーパー卸（分析・予定・残高）</div>
 </div>
 
 <nav class="tabs">
   <button type="button" class="tab-btn active" data-tab="analysis">📊 分析</button>
   <button type="button" class="tab-btn" data-tab="plan">📅 予定</button>
+  <button type="button" class="tab-btn" data-tab="balance">📦 残高</button>
 </nav>
 
 <div class="tab-pane active" id="tab-analysis">
@@ -394,6 +414,33 @@ tr.pl-cum td.pl-neg{color:var(--red);}
     <div class="empty-msg" id="plan-empty" style="display:none;"></div>
   </div>
 </div><!-- /#tab-plan -->
+
+<div class="tab-pane" id="tab-balance">
+  <div class="toolbar">
+    <label for="bal-start">開始日</label>
+    <input type="date" id="bal-start">
+    <label for="bal-end">終了日</label>
+    <input type="date" id="bal-end">
+    <label for="bal-scn">目標Q（予定シナリオ）</label>
+    <select id="bal-scn"><option value="">（指定しない）</option></select>
+    <button type="button" id="bal-run" class="bal-run">表示</button>
+    <span class="bal-status" id="bal-status"></span>
+  </div>
+  <div class="banner" id="bal-scn-note"></div>
+  <div class="table-wrap">
+    <table id="bal-table">
+      <thead><tr><th>商品 / 納品先</th><th>作成数</th><th>販売数</th><th>推定残</th><th class="bal-tgt-col" title="予定タブのシナリオ保存時の生成条件から再計算した目標Q（予定タブ右端の緑の列と同じ値）">目標Q</th><th title="目標Q − 作成数。プラス＝目標まであと何束作るか、マイナス（赤）＝目標超過">目標まで（あと）</th></tr></thead>
+      <tbody id="bal-body"></tbody>
+    </table>
+    <div class="empty-msg" id="bal-empty" style="display:none;"></div>
+  </div>
+  <div class="bal-note">
+    作成数＝加工アプリの加工記録（納品先別）。販売数＝納品アプリの売上取込・店頭販売実数（休業日・修正前の旧データは除外、「値下げ品」は元の商品に合算）。<br>
+    推定残がマイナス＝販売数が作成数を上回っている（加工記録漏れ、または期間前からの繰越在庫の可能性）。<br>
+    「その他」行の作成数は バーコードなし・仲卸用、販売数はファンシー自社店舗等。仲卸用は売上データが無いため、その分は推定残に残ります。<br>
+    目標Qは予定タブで保存したシナリオの生成条件（補正ベースライン×係数）から再計算した値で、「その他」行にはファンシーの目標Qを対応させています（仲卸用の目標は無し）。「目標まで」は 目標Q − 期間内の作成数。作成数の集計期間は、計画期間の開始日から始めると目標と揃います。
+  </div>
+</div><!-- /#tab-balance -->
 
 <script>
 const SUPABASE_URL='https://vvyzwwoduaqqamjvoqrp.supabase.co';
@@ -2275,15 +2322,296 @@ async function initPlanTab(){
   }
 }
 
+// ======================================================================
+// 残高タブ（出口戦略用）：期間内の 作成数 − 販売数 ＝ 推定残 を 商品 × 納品先 で表示
+//   作成数 = processing_records(record_type='process') ＋ processing_items（納品先別）
+//   販売数 = sales_records（日付・会社）＋ sales_items（商品・数量）。休業日(is_closed)・修正前の旧データ(is_edited)は除外
+// ======================================================================
+
+// hana-processing-app.html の MASTER_PRODUCTS.filter(p=>p.use_process) と同じ順・同じ名称（商品追加時は要同期）。
+// ただしラップダルマ用束花は納品アプリで扱わず販売数が常に0になるため、残高では除外（オーナー指示）。
+const BAL_PRODUCTS=[
+  '仏束花 450円','仏束花 600円','仏束花 1,000円',
+  '仏束花 1,500円','仏束花 2,000円','仏束花 3,000円',
+];
+// 納品先(destination_id) / 売上会社(company_id) → 表示行。どちらも該当しないものは「その他」に寄せる。
+const BAL_COMPANIES=[
+  {id:'montour',label:'もんとあーる'},
+  {id:'shufu',  label:'主婦の店'},
+  {id:'aoki',   label:'アオキ'},
+  {id:'other',  label:'その他（バーコードなし・仲卸用・ファンシー等）',onlyIfUsed:true},
+];
+const BAL_CO_IDS=BAL_COMPANIES.map(c=>c.id);
+function balCoKey(id){return BAL_CO_IDS.includes(id)?id:'other';}
+// 予定タブの系列(PLAN_COMPANIES.id) → 残高の行。ファンシー（3店舗合計）は「その他」行に対応させる。
+function balPlanCoKey(planCoId){return planCoId==='fancy_honten'?'other':balCoKey(planCoId);}
+
+let balInited=false;
+let balSeq=0; // 連打・再入時に古い応答で描画しないための連番
+let balScnList=[]; // 予定シナリオ（生成条件のみ）
+
+// ---- 目標Q（予定シナリオ保存時の生成条件から再計算） ----
+// 予定タブの genTargetQ / genBaselineFor / genFactorFor / genEstMQ / genAutoFactor と同じ式を、
+// 予定タブのグローバル状態(planRef 等)に触れず単独で計算する版。予定タブ側の式を変えたらここも合わせること。
+function balTargetFn(gc,ref){
+  gc=(gc&&typeof gc==='object')?gc:{};
+  const mode=gc.mode==='mq'?'mq':'factor';
+  const baseFactor=(typeof gc.baseFactor==='number'&&gc.baseFactor>0)?gc.baseFactor:1.20;
+  const baseline=(gc.baseline&&typeof gc.baseline==='object')?gc.baseline:{};
+  const factorOv=(gc.factorOv&&typeof gc.factorOv==='object')?gc.factorOv:{};
+  const baselineFor=(p,c)=>{
+    const ov=baseline[p]&&baseline[p][c];
+    return (ov!=null&&ov!=='')?ov:((ref.coTot[p]||{})[c]||0);
+  };
+  let autoFactor=baseFactor;
+  if(mode==='mq'){
+    const tmq=(typeof gc.targetMQ==='number'&&gc.targetMQ>0)?gc.targetMQ:null;
+    const mr=(typeof gc.marginRate==='number')?gc.marginRate:globalMarginRate;
+    let est=0;
+    PLAN_ROW_PRODUCTS.forEach(p=>{
+      const q0=ref.qty[p]||0;
+      const P=q0>0?(ref.amt[p]||0)/q0:0;
+      if(P<=0)return;
+      const m=P-P*(1-mr)-P*commissionRate;
+      est+=m*PLAN_COMPANIES.reduce((s,c)=>s+baselineFor(p,c.id),0);
+    });
+    if(est>0&&tmq!=null)autoFactor=tmq/est;
+  }
+  return function(product,planCoId){
+    let f=baseFactor;
+    if(mode==='mq')f=autoFactor;
+    else{const ov=factorOv[product];if(ov!=null&&ov!=='')f=ov/100;}
+    const raw=baselineFor(product,planCoId)*f;
+    return raw>0?Math.ceil(raw/10)*10:0; // 10束単位に切り上げ
+  };
+}
+
+// シナリオの参照年実績（計画期間ウィンドウ内、商品×会社の数量と商品別金額）。
+// 予定タブ loadPlanReference と同じ条件（ピーク日オフセットで対応づけ・もんとあーる税抜補正・is_edited等は絞らない）で集計し、
+// 予定タブで見ていた目標Qと一致させる。
+async function balFetchScenarioRef(planPeriod,refYear){
+  const eventId=planPeriod.eventId;
+  const refPeriod=resolveKiryuubi(eventId,refYear);
+  const before=daysBetweenISO(planPeriod.plan_start,planPeriod.peak_date);
+  const after=daysBetweenISO(planPeriod.peak_date,planPeriod.plan_end);
+  const start=addDaysISO(refPeriod.peak_date,-before);
+  const end=addDaysISO(refPeriod.peak_date,after);
+  const rows=await balFetchAll(`/rest/v1/sales_records?select=sales_date,company_id,store_id,sales_items(product_name,quantity,amount)&sales_date=gte.${start}&sales_date=lte.${end}&order=id.asc`);
+  const ref={coTot:{},qty:{},amt:{}};
+  rows.forEach(rec=>{
+    const planCo=planCoForRec(rec);
+    if(!planCo)return;
+    const needsTaxFix=rec.company_id==='montour'&&rec.sales_date<MONTOUR_TAX_FIX_DATE;
+    (rec.sales_items||[]).forEach(it=>{
+      const name=it.product_name;
+      if(!name)return;
+      const qty=it.quantity||0;
+      let amt=it.amount||0;
+      if(needsTaxFix)amt=amt/1.1;
+      if(!ref.coTot[name])ref.coTot[name]={};
+      ref.coTot[name][planCo.id]=(ref.coTot[name][planCo.id]||0)+qty;
+      ref.qty[name]=(ref.qty[name]||0)+qty;
+      ref.amt[name]=(ref.amt[name]||0)+amt;
+    });
+  });
+  return ref;
+}
+
+// 選択中シナリオ → {get(product,残高の行id), period, refYear, name} ／ 解決できなければ {error}
+async function balScenarioTarget(scn){
+  const mt=/^(.+)_(\d{4})$/.exec(scn.period_id||'');
+  const period=mt?resolveKiryuubi(mt[1],+mt[2]):null;
+  if(!period||!scn.ref_year)return {error:`シナリオの期間「${scn.period_id}」を解決できないため目標Qを計算できません`};
+  const ref=await balFetchScenarioRef(period,scn.ref_year);
+  const fn=balTargetFn(scn.gc,ref);
+  return {
+    period,refYear:scn.ref_year,name:scn.scenario_name,hasGc:!!scn.gc,
+    get:(product,balCoId)=>PLAN_COMPANIES.reduce((s,c)=>s+(balPlanCoKey(c.id)===balCoId?fn(product,c.id):0),0),
+  };
+}
+
+async function balLoadScenarios(){
+  const sel=document.getElementById('bal-scn');
+  const prev=sel.value;
+  try{
+    balScnList=await sbFetch('/rest/v1/production_plan_scenarios?select=id,period_id,scenario_name,ref_year,updated_at,gc:data-%3E__genConfig&order=updated_at.desc');
+  }catch(e){
+    console.warn('予定シナリオの取得に失敗しました',e);
+    balScnList=[];
+  }
+  // 今年の秋彼岸のシナリオを先頭に
+  const curPid='higan_aki_'+todayISO().slice(0,4);
+  const list=balScnList.slice().sort((a,b)=>(b.period_id===curPid)-(a.period_id===curPid));
+  sel.textContent='';
+  const none=document.createElement('option');
+  none.value='';none.textContent='（指定しない）';
+  sel.appendChild(none);
+  list.forEach(s=>{
+    const o=document.createElement('option');
+    o.value=s.id;o.textContent=s.period_id+' ／ '+s.scenario_name;
+    sel.appendChild(o);
+  });
+  if(prev&&balScnList.some(s=>s.id===prev))sel.value=prev;
+  return list.find(s=>s.period_id===curPid);
+}
+
+// PostgREST の1回あたり上限(1000行)を超えても取りこぼさないようページング取得
+async function balFetchAll(path){
+  const PAGE=1000,out=[];
+  for(let off=0;off<100000;off+=PAGE){
+    const rows=await sbFetch(path+'&limit='+PAGE+'&offset='+off);
+    out.push(...rows);
+    if(rows.length<PAGE)break;
+  }
+  return out;
+}
+
+function balDefaultRange(){
+  const today=todayISO();
+  const y=+today.slice(0,4);
+  let p=resolveKiryuubi('higan_aki',y);
+  if(p.plan_start>today){ // 今年の秋彼岸前：昨年の秋彼岸期間を出す
+    p=resolveKiryuubi('higan_aki',y-1);
+    return {start:p.plan_start,end:p.plan_end};
+  }
+  return {start:p.plan_start,end:today};
+}
+
+async function initBalanceTab(){
+  if(balInited){balLoadScenarios();return;} // 予定タブで保存した新しいシナリオを拾う
+  balInited=true;
+  const r=balDefaultRange();
+  document.getElementById('bal-start').value=r.start;
+  document.getElementById('bal-end').value=r.end;
+  document.getElementById('bal-run').addEventListener('click',loadBalance);
+  document.getElementById('bal-scn').addEventListener('change',loadBalance);
+  // 今年の秋彼岸のシナリオがあれば、最新更新のものを初期選択
+  const def=await balLoadScenarios();
+  if(def)document.getElementById('bal-scn').value=def.id;
+  loadBalance();
+}
+
+async function loadBalance(){
+  const start=document.getElementById('bal-start').value;
+  const end=document.getElementById('bal-end').value;
+  const status=document.getElementById('bal-status');
+  const btn=document.getElementById('bal-run');
+  if(!start||!end){status.textContent='開始日と終了日を入力してください';return;}
+  if(start>end){status.textContent='開始日が終了日より後になっています';return;}
+  const seq=++balSeq;
+  btn.disabled=true;status.textContent='読み込み中…';
+  const scnId=document.getElementById('bal-scn').value;
+  const scn=scnId?balScnList.find(s=>s.id===scnId):null;
+  const note=document.getElementById('bal-scn-note');
+  try{
+    const [procRows,salesRows,tgt]=await Promise.all([
+      balFetchAll(`/rest/v1/processing_records?select=product_name,processing_items(destination_id,quantity)&record_type=eq.process&record_date=gte.${start}&record_date=lte.${end}&order=id.asc`),
+      balFetchAll(`/rest/v1/sales_records?select=company_id,sales_items(product_name,quantity)&sales_date=gte.${start}&sales_date=lte.${end}&is_closed=eq.false&is_edited=eq.false&order=id.asc`),
+      scn?balScenarioTarget(scn):Promise.resolve(null),
+    ]);
+    if(seq!==balSeq)return;
+    // agg[商品][行id] = {made, sold}
+    const agg={};
+    BAL_PRODUCTS.forEach(n=>{agg[n]={};BAL_CO_IDS.forEach(c=>{agg[n][c]={made:0,sold:0};});});
+    procRows.forEach(rec=>{
+      const a=agg[rec.product_name];
+      if(!a)return;
+      (rec.processing_items||[]).forEach(it=>{a[balCoKey(it.destination_id)].made+=it.quantity||0;});
+    });
+    salesRows.forEach(rec=>{
+      const co=balCoKey(rec.company_id);
+      (rec.sales_items||[]).forEach(it=>{
+        // 「仏束花 1,000円（値下げ品）」は同じ束の値下げ販売なので元の商品に合算
+        const name=(it.product_name||'').replace(/（値下げ品）$/,'');
+        const a=agg[name];
+        if(!a)return;
+        a[co].sold+=it.quantity||0;
+      });
+    });
+    // 目標Qの注記（計画期間と作成数の集計期間のズレ、生成条件なしの旧シナリオ、解決エラー）
+    const msgs=[];
+    if(tgt&&tgt.error)msgs.push(tgt.error);
+    else if(tgt){
+      msgs.push(`目標Q：「${tgt.name}」（計画期間 ${tgt.period.plan_start} 〜 ${tgt.period.plan_end}／比較年 ${tgt.refYear}）`);
+      if(start!==tgt.period.plan_start||end<tgt.period.plan_end)msgs.push(`作成数は ${start} 〜 ${end} の集計です（計画期間と異なるため「目標まで」はその時点の途中経過）`);
+      if(!tgt.hasGc)msgs.push('このシナリオは生成条件が未保存の旧形式のため、既定条件（係数120%・補正なし）で再計算しています');
+    }
+    note.textContent=msgs.join('　／　');
+    note.classList.toggle('show',msgs.length>0);
+    renderBalance(agg,tgt&&!tgt.error?tgt:null);
+    status.textContent=`${start} 〜 ${end}（加工記録 ${procRows.length}件・売上 ${salesRows.length}件）`;
+  }catch(e){
+    if(seq!==balSeq)return;
+    console.warn('残高の取得に失敗しました',e);
+    status.textContent='取得に失敗しました：'+(e.message||e);
+  }finally{
+    if(seq===balSeq)btn.disabled=false;
+  }
+}
+
+function balFmt(n){return n.toLocaleString('ja-JP');}
+function balCell(text,cls){
+  const td=document.createElement('td');
+  td.textContent=text;
+  if(cls)td.className=cls;
+  return td;
+}
+// target: 目標Q（null＝目標未指定→「—」表示）。目標まで＝目標Q−作成数（マイナス＝目標超過）
+function balRow(cls,label,made,sold,target){
+  const tr=document.createElement('tr');
+  tr.className=cls;
+  tr.appendChild(balCell(label));
+  tr.appendChild(balCell(balFmt(made)));
+  tr.appendChild(balCell(balFmt(sold)));
+  const rem=made-sold;
+  tr.appendChild(balCell(balFmt(rem),rem<0?'bal-neg':''));
+  if(target==null){
+    tr.appendChild(balCell('—','bal-tgt-col bal-none'));
+    tr.appendChild(balCell('—','bal-none'));
+  }else{
+    const left=target-made;
+    tr.appendChild(balCell(balFmt(target),'bal-tgt-col'));
+    tr.appendChild(balCell(balFmt(left),left<0?'bal-neg':''));
+  }
+  return tr;
+}
+
+function renderBalance(agg,tgt){
+  const body=document.getElementById('bal-body');
+  const empty=document.getElementById('bal-empty');
+  body.textContent='';
+  let totMade=0,totSold=0,totTgt=0,any=false;
+  BAL_PRODUCTS.forEach(name=>{
+    const a=agg[name];
+    const made=BAL_CO_IDS.reduce((s,c)=>s+a[c].made,0);
+    const sold=BAL_CO_IDS.reduce((s,c)=>s+a[c].sold,0);
+    const tq=tgt?BAL_CO_IDS.reduce((s,c)=>s+tgt.get(name,c),0):null;
+    totMade+=made;totSold+=sold;
+    if(tq!=null)totTgt+=tq;
+    if(made||sold||tq)any=true;
+    body.appendChild(balRow('bal-prod',name,made,sold,tq));
+    BAL_COMPANIES.forEach(co=>{
+      const c=a[co.id];
+      const ctq=tgt?tgt.get(name,co.id):null;
+      if(co.onlyIfUsed&&!c.made&&!c.sold&&!ctq)return;
+      body.appendChild(balRow('bal-co','└ '+co.label,c.made,c.sold,ctq));
+    });
+  });
+  body.appendChild(balRow('bal-total','合計',totMade,totSold,tgt?totTgt:null));
+  empty.style.display=any?'none':'block';
+  empty.textContent=any?'':'この期間の加工記録・売上データがありません';
+}
+
 function initTabs(){
   const btns=[...document.querySelectorAll('.tab-btn')];
-  const panes={analysis:document.getElementById('tab-analysis'),plan:document.getElementById('tab-plan')};
+  const panes={analysis:document.getElementById('tab-analysis'),plan:document.getElementById('tab-plan'),balance:document.getElementById('tab-balance')};
   btns.forEach(btn=>{
     btn.addEventListener('click',()=>{
       const t=btn.dataset.tab;
       btns.forEach(b=>b.classList.toggle('active',b===btn));
       Object.keys(panes).forEach(k=>panes[k]&&panes[k].classList.toggle('active',k===t));
       if(t==='plan')initPlanTab();
+      if(t==='balance')initBalanceTab();
     });
   });
 }
