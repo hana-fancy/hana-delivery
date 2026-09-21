@@ -161,6 +161,30 @@ tr.pl-cum td.pl-neg{color:var(--red);}
 .bal-run:hover{background:var(--green-pale);}
 .bal-run:disabled{opacity:.5;cursor:not-allowed;}
 
+/* ===== 推移タブ（売れ行きグラフ） ===== */
+.trend-ctl{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-bottom:8px;}
+.trend-ctl-label{font-size:12px;font-weight:700;color:var(--gray-600);min-width:84px;}
+.trend-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.trend-chip{font-family:inherit;font-size:13px;font-weight:700;display:inline-flex;align-items:center;gap:7px;padding:5px 13px;border:1.5px solid var(--gray-200);border-radius:999px;background:var(--white);color:var(--gray-400);cursor:pointer;}
+.trend-chip .sw{width:12px;height:12px;border-radius:50%;background:var(--gray-200);flex:none;}
+.trend-chip.on{color:var(--gray-900);border-color:var(--gray-400);}
+.trend-chip.on .sw{background:var(--sw);}
+.trend-chip:hover:not(:disabled){border-color:var(--gray-600);}
+.trend-chip:disabled{opacity:.5;cursor:not-allowed;}
+.trend-chip .ln{display:inline-block;width:28px;height:3px;flex:none;background:var(--gray-200);}
+.trend-chip.on .ln{--c:var(--gray-800);}
+.trend-chip .ln-prev{background:repeating-linear-gradient(90deg,var(--c,var(--gray-400)) 0 6px,transparent 6px 11px);}
+.trend-chip .ln-made{background:repeating-linear-gradient(90deg,var(--c,var(--gray-400)) 0 10px,transparent 10px 14px,var(--c,var(--gray-400)) 14px 16px,transparent 16px 20px);}
+.trend-chip .ln-plan{background:repeating-linear-gradient(90deg,var(--c,var(--gray-400)) 0 3px,transparent 3px 8px);height:4px;}
+#trend-plan-scn{max-width:220px;}
+.trend-headline{font-size:22px;font-weight:700;color:var(--gray-900);margin:10px 0 12px;line-height:1.5;}
+.trend-headline .big{color:var(--green);font-size:30px;}
+.trend-headline .sub{display:block;font-size:13px;font-weight:400;color:var(--gray-600);}
+.trend-chart-wrap{position:relative;height:clamp(380px,68vh,760px);background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow-sm);padding:14px 10px 8px;margin-bottom:16px;}
+#trend-table{min-width:0;max-width:1100px;}
+#trend-table td.pos{color:var(--green);font-weight:700;}
+#trend-table td.neg{color:var(--red);}
+
 @media print{
   body{padding:0;background:#fff;}
   .toolbar,#scenario-panel,.banner,.col-toggle,.reset-sort{display:none!important;}
@@ -181,13 +205,14 @@ tr.pl-cum td.pl-neg{color:var(--red);}
 
 <div class="header">
   <div class="title">経営ダッシュボード</div>
-  <div class="subtitle">v0.1 — スーパー卸（分析・予定・残高）</div>
+  <div class="subtitle">v0.1 — スーパー卸（分析・予定・残高・推移）</div>
 </div>
 
 <nav class="tabs">
   <button type="button" class="tab-btn active" data-tab="analysis">📊 分析</button>
   <button type="button" class="tab-btn" data-tab="plan">📅 予定</button>
   <button type="button" class="tab-btn" data-tab="balance">📦 残高</button>
+  <button type="button" class="tab-btn" data-tab="trend">📈 推移</button>
 </nav>
 
 <div class="tab-pane active" id="tab-analysis">
@@ -437,10 +462,39 @@ tr.pl-cum td.pl-neg{color:var(--red);}
   <div class="bal-note">
     作成数＝加工アプリの加工記録（納品先別）。販売数＝納品アプリの売上取込・店頭販売実数（休業日・修正前の旧データは除外、「値下げ品」は元の商品に合算）。<br>
     推定残がマイナス＝販売数が作成数を上回っている（加工記録漏れ、または期間前からの繰越在庫の可能性）。<br>
-    「その他」行の作成数は バーコードなし・仲卸用、販売数はファンシー自社店舗等。仲卸用は売上データが無いため、その分は推定残に残ります。<br>
-    目標Qは予定タブで保存したシナリオの生成条件（補正ベースライン×係数）から再計算した値で、「その他」行にはファンシーの目標Qを対応させています（仲卸用の目標は無し）。「目標まで」は 目標Q − 期間内の作成数。作成数の集計期間は、計画期間の開始日から始めると目標と揃います。
+    仲卸用は買取のため、作成数をそのまま販売数として計上します（推定残は常に0）。「その他」行の作成数はバーコードなし、販売数はファンシー自社店舗等です。<br>
+    目標Qは予定タブで保存したシナリオの生成条件（補正ベースライン×係数）から再計算した値で、「その他」行にはファンシーの目標Qを対応させています。目標Qは卸3社＋ファンシーの売上ベースで仲卸用を含まないため、「目標まで」は <b>目標Q − 期間内の作成数（仲卸用を除く）</b> です。作成数の集計期間は、計画期間の開始日から始めると目標と揃います。
   </div>
 </div><!-- /#tab-balance -->
+
+<div class="tab-pane" id="tab-trend">
+  <div class="toolbar">
+    <label for="trend-year">年</label>
+    <select id="trend-year"></select>
+    <label for="trend-event">物日</label>
+    <select id="trend-event"></select>
+    <span class="bal-status" id="trend-status"></span>
+  </div>
+  <div class="trend-ctl"><span class="trend-ctl-label">見る軸</span><div class="trend-chips" id="trend-axis"></div></div>
+  <div class="trend-ctl"><span class="trend-ctl-label" id="trend-lines-label">表示する商品</span><div class="trend-chips" id="trend-lines"></div></div>
+  <div class="trend-ctl"><span class="trend-ctl-label" id="trend-filter-label">集計する会社</span><div class="trend-chips" id="trend-filter"></div></div>
+  <div class="trend-ctl"><span class="trend-ctl-label">重ねる線</span><div class="trend-chips" id="trend-kinds"></div><select id="trend-plan-scn" style="display:none;" aria-label="予定シナリオ"></select></div>
+  <div class="trend-headline" id="trend-headline"></div>
+  <div class="trend-chart-wrap"><canvas id="trend-canvas" role="img" aria-label="累積販売数の推移（今年と昨年の比較）。数値は下の表にあります"></canvas></div>
+  <div class="empty-msg" id="trend-empty" style="display:none;"></div>
+  <div class="table-wrap">
+    <table id="trend-table">
+      <thead id="trend-head"></thead>
+      <tbody id="trend-body"></tbody>
+    </table>
+  </div>
+  <div class="bal-note">
+    横軸は中日前日（ピーク）を0とした相対日数で、今年・昨年をピークに揃えて重ねています（ピーク日は物日マスタの値。データからの推測はしていません）。縦軸は期間の初日からの累積（束）です。<br>
+    <b>実線＝今年の販売</b>（卸3社＋ファンシー全店の売上取込。休業日・修正前の旧データは除外、「値下げ品」は元の商品に合算）／<b>点線＝昨年の販売</b>／<b>一点鎖線＝作成実績</b>（加工アプリの加工記録）／<b>点々＝予定</b>（予定タブのシナリオの計画数）。作成実績・予定を重ねるときは、見やすさのため昨年の線を自動で外します（もう一度押せば戻せます）。<br>
+    仲卸用は買取のため 販売＝作成数として扱います（今年のみ・昨年のデータなし。既定では合計に含めず、チップでオンにすると加わります）。バーコードなし（納品先が未確定の作成分）は推移には含めていません。<br>
+    今年の販売の線は売上データがある最新日までです。直近日はメール取込前の分が含まれないため、少なめに見えることがあります。
+  </div>
+</div><!-- /#tab-trend -->
 
 <script>
 const SUPABASE_URL='https://vvyzwwoduaqqamjvoqrp.supabase.co';
@@ -2339,7 +2393,9 @@ const BAL_COMPANIES=[
   {id:'montour',label:'もんとあーる'},
   {id:'shufu',  label:'主婦の店'},
   {id:'aoki',   label:'アオキ'},
-  {id:'other',  label:'その他（バーコードなし・仲卸用・ファンシー等）',onlyIfUsed:true},
+  // 仲卸用は買取：作成した分がそのまま販売（売上データは無い）。目標Q（卸3社＋ファンシーの売上ベース）にも含まれない。
+  {id:'nakauroshi',label:'仲卸用（買取＝販売として計上）',onlyIfUsed:true,soldIsMade:true,noTarget:true},
+  {id:'other',  label:'その他（バーコードなし・ファンシー等）',onlyIfUsed:true},
 ];
 const BAL_CO_IDS=BAL_COMPANIES.map(c=>c.id);
 function balCoKey(id){return BAL_CO_IDS.includes(id)?id:'other';}
@@ -2528,6 +2584,7 @@ async function loadBalance(){
         a[co].sold+=it.quantity||0;
       });
     });
+    BAL_PRODUCTS.forEach(n=>{BAL_COMPANIES.forEach(co=>{if(co.soldIsMade)agg[n][co.id].sold=agg[n][co.id].made;});});
     // 目標Qの注記（計画期間と作成数の集計期間のズレ、生成条件なしの旧シナリオ、解決エラー）
     const msgs=[];
     if(tgt&&tgt.error)msgs.push(tgt.error);
@@ -2557,7 +2614,8 @@ function balCell(text,cls){
   return td;
 }
 // target: 目標Q（null＝目標未指定→「—」表示）。目標まで＝目標Q−作成数（マイナス＝目標超過）
-function balRow(cls,label,made,sold,target){
+// gapMade: 「目標まで」の計算に使う作成数（省略時は made）。目標に含まれない仲卸用を除いた数を渡す
+function balRow(cls,label,made,sold,target,gapMade){
   const tr=document.createElement('tr');
   tr.className=cls;
   tr.appendChild(balCell(label));
@@ -2569,7 +2627,7 @@ function balRow(cls,label,made,sold,target){
     tr.appendChild(balCell('—','bal-tgt-col bal-none'));
     tr.appendChild(balCell('—','bal-none'));
   }else{
-    const left=target-made;
+    const left=target-(gapMade==null?made:gapMade);
     tr.appendChild(balCell(balFmt(target),'bal-tgt-col'));
     tr.appendChild(balCell(balFmt(left),left<0?'bal-neg':''));
   }
@@ -2580,31 +2638,511 @@ function renderBalance(agg,tgt){
   const body=document.getElementById('bal-body');
   const empty=document.getElementById('bal-empty');
   body.textContent='';
-  let totMade=0,totSold=0,totTgt=0,any=false;
+  let totMade=0,totSold=0,totTgt=0,totGapMade=0,any=false;
   BAL_PRODUCTS.forEach(name=>{
     const a=agg[name];
     const made=BAL_CO_IDS.reduce((s,c)=>s+a[c].made,0);
     const sold=BAL_CO_IDS.reduce((s,c)=>s+a[c].sold,0);
     const tq=tgt?BAL_CO_IDS.reduce((s,c)=>s+tgt.get(name,c),0):null;
-    totMade+=made;totSold+=sold;
+    // 目標Qは卸3社＋ファンシーの売上ベースなので、「目標まで」は目標の無い納品先（仲卸用）を除いた作成数と比べる
+    const madeForGap=made-BAL_COMPANIES.reduce((s,co)=>s+(co.noTarget?a[co.id].made:0),0);
+    totMade+=made;totSold+=sold;totGapMade+=madeForGap;
     if(tq!=null)totTgt+=tq;
     if(made||sold||tq)any=true;
-    body.appendChild(balRow('bal-prod',name,made,sold,tq));
+    body.appendChild(balRow('bal-prod',name,made,sold,tq,madeForGap));
     BAL_COMPANIES.forEach(co=>{
       const c=a[co.id];
-      const ctq=tgt?tgt.get(name,co.id):null;
+      const ctq=(tgt&&!co.noTarget)?tgt.get(name,co.id):null;
       if(co.onlyIfUsed&&!c.made&&!c.sold&&!ctq)return;
       body.appendChild(balRow('bal-co','└ '+co.label,c.made,c.sold,ctq));
     });
   });
-  body.appendChild(balRow('bal-total','合計',totMade,totSold,tgt?totTgt:null));
+  body.appendChild(balRow('bal-total','合計',totMade,totSold,tgt?totTgt:null,totGapMade));
   empty.style.display=any?'none':'block';
   empty.textContent=any?'':'この期間の加工記録・売上データがありません';
 }
 
+// ======================================================================
+// 推移タブ：物日の累積販売数を 今年（実線）× 昨年（点線）で、ピーク日=0 の相対日数に揃えて重ねる
+//   物日は KIRYUUBI_EVENTS の全種類に対応（年×物日セレクタ）。ピーク日・期間は resolveKiryuubi のマスタ値を使い、
+//   データからは推測しない。X軸の範囲は今年の生産計画ウィンドウ（planStart〜planEnd）の相対日数で、昨年も同じ相対範囲を切り出す。
+//   線の単位は「商品別／会社別」を切替。もう一方の軸はチップで絞り込む。
+//   重ねられるもの：昨年の販売（点線）／今年の作成実績（加工記録・一点鎖線）／今年の予定（予定タブのシナリオ・点々）
+//   販売＝卸3社＋ファンシー全店の売上取込（planCoForRec）。仲卸用は買取のため 販売＝作成数（今年のみ・昨年データなし）。
+//   バーコードなし（納品先が未確定の作成分）は会社に割り当てられないため、推移では扱わない。
+// ======================================================================
+const TREND_CHARTJS_URL='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+const TREND_CHARTJS_SRI='sha512-CQBWl4fJHWbryGE+Pc7UAxWMUMNMWzWxF4SQo9CgkJIN1kx6djDQZjh3Y8SZ1d+6I+1zze6Z7kHXO7q3UyZAWw==';
+// 色は「線の実体（商品・会社）」に固定し、選択の増減で塗り替えない。dataviz 検証済みカテゴリ配色の先頭スロットを順に使用。合計は無彩色のインク。
+const TREND_PRODUCT_COLORS=['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300'];
+const TREND_TOTAL={id:'total',label:'合計',color:'#3c4043'};
+const TREND_PRODUCTS=BAL_PRODUCTS.map((n,i)=>({id:n,label:n.replace('仏束花 ',''),color:TREND_PRODUCT_COLORS[i]}));
+const TREND_COS=[
+  {id:'montour',     label:'もんとあーる',color:'#2a78d6'},
+  {id:'shufu',       label:'主婦の店',    color:'#eb6834'},
+  {id:'aoki',        label:'アオキ',      color:'#1baf7a'},
+  {id:'fancy_honten',label:'ファンシー',  color:'#eda100'},
+  {id:'nakauroshi',  label:'仲卸用',      color:'#e87ba4',noPrev:true,title:'買取のため 作成数＝販売数として計上。今年のみ（昨年の加工記録なし）。推移では初期オフ'},
+];
+const TREND_SALES_COS=['montour','shufu','aoki','fancy_honten']; // 「合計」に含める会社（仲卸用は既定で含めない）
+// 線の種類（描画順＝先に描くほど下）。今年の販売が最前面。
+const TREND_KINDS={
+  prev:{label:'昨年の販売',short:'昨年',dash:[6,5],width:2},
+  plan:{label:'予定',short:'予定',dash:[1,6],width:3.4,cap:'round'},
+  made:{label:'作成実績',short:'作成',dash:[10,4,2,4],width:2.5},
+  now: {label:'今年の販売',short:'今年',dash:[],width:2.5},
+};
+const TREND_PEAK_COLOR='#6741d9';
+
+let trendInited=false;
+let trendSeq=0;
+let trendAxis='product'; // 'product'＝線が商品 / 'company'＝線が会社
+const trendLines={product:new Set(['total',BAL_PRODUCTS[0],BAL_PRODUCTS[1],BAL_PRODUCTS[2]]),company:new Set(['total','montour','shufu','aoki'])};
+const trendFilter={company:new Set(TREND_SALES_COS),product:new Set(BAL_PRODUCTS)}; // 線でない側の軸の絞り込み
+const trendKinds={prev:true,made:false,plan:false};
+let trendPlanId=null;
+let trendState=null;   // {cur,prev,before,after,today,curSales,prevSales,made,scns}
+let trendChart=null;
+let trendJsPromise=null;
+
+function trendLoadChartJs(){
+  if(window.Chart)return Promise.resolve();
+  if(!trendJsPromise){
+    trendJsPromise=new Promise((resolve,reject)=>{
+      const s=document.createElement('script');
+      s.src=TREND_CHARTJS_URL;s.integrity=TREND_CHARTJS_SRI;s.crossOrigin='anonymous';
+      s.onload=()=>resolve();
+      s.onerror=()=>{trendJsPromise=null;reject(new Error('グラフ描画ライブラリ(Chart.js)を読み込めませんでした'));};
+      document.head.appendChild(s);
+    });
+  }
+  return trendJsPromise;
+}
+
+function trendMD(iso){return (+iso.slice(5,7))+'/'+(+iso.slice(8,10));}
+function trendSigned(n){return n>0?'+'+n:String(n);}
+function trendFmt(n){return n.toLocaleString('ja-JP');}
+
+// ---------- コントロール ----------
+// ボタン1個。opts: on / color（丸）/ line（線見本 prev|made|plan）/ title / disabled / onClick
+function trendChipEl(label,opts){
+  const b=document.createElement('button');
+  b.type='button';b.className='trend-chip'+(opts.on?' on':'');
+  b.setAttribute('aria-pressed',opts.on?'true':'false');
+  if(opts.color)b.style.setProperty('--sw',opts.color);
+  if(opts.title)b.title=opts.title;
+  if(opts.disabled)b.disabled=true;
+  const sw=document.createElement('span');
+  sw.className=opts.line?'ln ln-'+opts.line:'sw';
+  b.appendChild(sw);
+  b.appendChild(document.createTextNode(label));
+  b.addEventListener('click',opts.onClick);
+  return b;
+}
+function trendToggleSet(set,id){
+  if(set.has(id)){if(set.size>1)set.delete(id);}else set.add(id);
+}
+
+function renderTrendControls(){
+  const st=trendState;
+  const byId=id=>document.getElementById(id);
+  // 見る軸
+  const ax=byId('trend-axis');ax.textContent='';
+  [['product','商品別'],['company','会社別']].forEach(([k,l])=>{
+    ax.appendChild(trendChipEl(l,{on:trendAxis===k,color:'#3c4043',onClick:()=>{trendAxis=k;renderTrendControls();renderTrend();}}));
+  });
+  // 線（軸により 商品 or 会社）
+  const lineEnts=trendAxis==='product'?[TREND_TOTAL,...TREND_PRODUCTS]:[TREND_TOTAL,...TREND_COS];
+  const lines=trendLines[trendAxis];
+  byId('trend-lines-label').textContent=trendAxis==='product'?'表示する商品':'表示する会社';
+  const lb=byId('trend-lines');lb.textContent='';
+  lineEnts.forEach(e=>{
+    lb.appendChild(trendChipEl(e.label,{on:lines.has(e.id),color:e.color,title:e.title,onClick:()=>{trendToggleSet(lines,e.id);renderTrendControls();renderTrend();}}));
+  });
+  // 絞り込み（線でない側の軸）
+  const other=trendAxis==='product'?'company':'product';
+  const fEnts=other==='company'?TREND_COS:TREND_PRODUCTS;
+  byId('trend-filter-label').textContent=other==='company'?'集計する会社':'集計する商品';
+  const fb=byId('trend-filter');fb.textContent='';
+  fEnts.forEach(e=>{
+    fb.appendChild(trendChipEl(e.label,{on:trendFilter[other].has(e.id),color:e.color,title:e.title,onClick:()=>{trendToggleSet(trendFilter[other],e.id);renderTrendControls();renderTrend();}}));
+  });
+  // 重ねる線
+  const kb=byId('trend-kinds');kb.textContent='';
+  const noScn=!st||!st.scns.length;
+  const overlayOn=k=>{trendKinds[k]=!trendKinds[k];if(trendKinds[k])trendKinds.prev=false;}; // 作成・予定を重ねるときは昨年を自動で外す（今年の販売に絞る）
+  kb.appendChild(trendChipEl('昨年の販売',{on:trendKinds.prev,line:'prev',onClick:()=>{trendKinds.prev=!trendKinds.prev;renderTrendControls();renderTrend();}}));
+  kb.appendChild(trendChipEl('作成実績',{on:trendKinds.made,line:'made',title:'加工アプリの加工記録（今年）',onClick:()=>{overlayOn('made');renderTrendControls();renderTrend();}}));
+  kb.appendChild(trendChipEl('予定',{on:trendKinds.plan,line:'plan',disabled:noScn,title:noScn?'この物日・年の予定シナリオがありません（予定タブで保存すると選べます）':'予定タブで保存したシナリオの計画数（今年）',onClick:()=>{overlayOn('plan');renderTrendControls();renderTrend();}}));
+  const sel=byId('trend-plan-scn');
+  sel.style.display=(trendKinds.plan&&!noScn)?'':'none';
+}
+
+function initTrendControls(){
+  const ys=document.getElementById('trend-year');
+  const cy=+todayISO().slice(0,4);
+  analysisYearOptions().forEach(y=>{
+    const o=document.createElement('option');o.value=String(y);o.textContent=y+'年';ys.appendChild(o);
+  });
+  ys.value=String(cy);
+  const es=document.getElementById('trend-event');
+  KIRYUUBI_EVENTS.forEach(ev=>{
+    const o=document.createElement('option');o.value=ev.id;o.textContent=ev.name;es.appendChild(o);
+  });
+  es.value='higan_aki';
+  ys.addEventListener('change',loadTrend);
+  es.addEventListener('change',loadTrend);
+  document.getElementById('trend-plan-scn').addEventListener('change',e=>{trendPlanId=e.target.value;renderTrend();});
+  renderTrendControls();
+}
+
+async function initTrendTab(){
+  if(trendInited)return;
+  trendInited=true;
+  initTrendControls();
+  loadTrend();
+}
+
+// ---------- 集計 ----------
+// d[商品][会社id] = 相対日ごとの数量配列（長さ N＝before+after+1、idx＝ピーク日からの日数+before）
+function trendEmpty(N){
+  const d={};
+  BAL_PRODUCTS.forEach(p=>{d[p]={};TREND_COS.forEach(c=>{d[p][c.id]=new Array(N).fill(0);});});
+  return d;
+}
+function trendAggSales(rows,period,before,after,today){
+  const N=before+after+1,d=trendEmpty(N);
+  let lastDate=null;
+  rows.forEach(rec=>{
+    const pc=planCoForRec(rec);
+    if(!pc||rec.sales_date>today)return;
+    const idx=daysBetweenISO(period.peak_date,rec.sales_date)+before;
+    if(idx<0||idx>=N)return;
+    if(lastDate==null||rec.sales_date>lastDate)lastDate=rec.sales_date;
+    (rec.sales_items||[]).forEach(it=>{
+      const name=(it.product_name||'').replace(/（値下げ品）$/,'');
+      if(d[name])d[name][pc.id][idx]+=it.quantity||0;
+    });
+  });
+  return {d,lastIdx:lastDate?daysBetweenISO(period.peak_date,lastDate)+before:null};
+}
+// 加工記録（納品先別）。会社に対応する納品先のみ（バーコードなしは対象外）
+function trendAggMade(rows,period,before,after,today){
+  const N=before+after+1,d=trendEmpty(N);
+  let lastDate=null;
+  rows.forEach(rec=>{
+    if(rec.record_date>today)return;
+    const idx=daysBetweenISO(period.peak_date,rec.record_date)+before;
+    if(idx<0||idx>=N||!d[rec.product_name])return;
+    if(lastDate==null||rec.record_date>lastDate)lastDate=rec.record_date;
+    (rec.processing_items||[]).forEach(it=>{
+      const arr=d[rec.product_name][it.destination_id];
+      if(arr)arr[idx]+=it.quantity||0;
+    });
+  });
+  return {d,lastIdx:lastDate?daysBetweenISO(period.peak_date,lastDate)+before:null};
+}
+// 予定シナリオ（data[日付][商品][会社id]=計画数。__genConfig は予約キー）
+function trendAggPlan(scn,period,before,after){
+  const N=before+after+1,d=trendEmpty(N);
+  Object.entries(scn.data||{}).forEach(([date,prods])=>{
+    if(date==='__genConfig')return;
+    const idx=daysBetweenISO(period.peak_date,date)+before;
+    if(idx<0||idx>=N)return;
+    Object.entries(prods||{}).forEach(([p,cos])=>{
+      if(!d[p])return;
+      Object.entries(cos||{}).forEach(([cid,v])=>{if(d[p][cid]&&v>0)d[p][cid][idx]+=v;});
+    });
+  });
+  return {d,lastIdx:N-1};
+}
+// 商品集合×会社集合の日別合計
+function trendVals(src,prodSet,coSet,N){
+  const out=new Array(N).fill(0);
+  prodSet.forEach(p=>coSet.forEach(c=>{
+    const arr=src.d[p]&&src.d[p][c];
+    if(arr)for(let i=0;i<N;i++)out[i]+=arr[i];
+  }));
+  return out;
+}
+// 現在の軸での「線」一覧（合計を含む）。prods/cos がその線の集計対象
+function trendEntities(){
+  if(trendAxis==='product'){
+    return [TREND_TOTAL,...TREND_PRODUCTS].map(e=>({...e,prods:e.id==='total'?new Set(BAL_PRODUCTS):new Set([e.id]),cos:trendFilter.company}));
+  }
+  return [TREND_TOTAL,...TREND_COS].map(e=>({...e,prods:trendFilter.product,cos:e.id==='total'?new Set(TREND_SALES_COS):new Set([e.id])}));
+}
+
+async function loadTrend(){
+  const year=+document.getElementById('trend-year').value;
+  const eventId=document.getElementById('trend-event').value;
+  const status=document.getElementById('trend-status');
+  const seq=++trendSeq;
+  status.textContent='読み込み中…';
+  try{
+    const cur=resolveKiryuubi(eventId,year);
+    const prev=resolveKiryuubi(eventId,year-1);
+    const before=daysBetweenISO(cur.plan_start,cur.peak_date);
+    const after=daysBetweenISO(cur.peak_date,cur.plan_end);
+    const range=p=>[addDaysISO(p.peak_date,-before),addDaysISO(p.peak_date,after)];
+    const qs=([s,e])=>`/rest/v1/sales_records?select=sales_date,company_id,store_id,sales_items(product_name,quantity)&sales_date=gte.${s}&sales_date=lte.${e}&is_closed=eq.false&is_edited=eq.false&order=id.asc`;
+    const [cs,ce]=range(cur);
+    const [curRows,prevRows,madeRows,scns]=await Promise.all([
+      balFetchAll(qs(range(cur))),
+      balFetchAll(qs(range(prev))),
+      balFetchAll(`/rest/v1/processing_records?select=record_date,product_name,processing_items(destination_id,quantity)&record_type=eq.process&record_date=gte.${cs}&record_date=lte.${ce}&order=id.asc`),
+      sbFetch(`/rest/v1/production_plan_scenarios?select=id,scenario_name,data&period_id=eq.${cur.id}&order=updated_at.desc`).catch(()=>[]),
+      trendLoadChartJs(),
+    ]);
+    if(seq!==trendSeq)return;
+    const today=todayISO();
+    const curSales=trendAggSales(curRows,cur,before,after,today);
+    const prevSales=trendAggSales(prevRows,prev,before,after,'9999-12-31');
+    const made=trendAggMade(madeRows,cur,before,after,today);
+    // 仲卸用は買取：販売＝作成数（今年のみ）
+    BAL_PRODUCTS.forEach(p=>{curSales.d[p].nakauroshi=made.d[p].nakauroshi.slice();});
+    if(!scns.some(s=>s.id===trendPlanId))trendPlanId=scns.length?scns[0].id:null;
+    trendState={cur,prev,before,after,today,curSales,prevSales,made,scns,planCache:{}};
+    const sel=document.getElementById('trend-plan-scn');
+    sel.textContent='';
+    scns.forEach(s=>{const o=document.createElement('option');o.value=s.id;o.textContent=s.scenario_name;sel.appendChild(o);});
+    if(trendPlanId)sel.value=trendPlanId;
+    if(!scns.length)trendKinds.plan=false;
+    status.textContent=curSales.lastIdx!=null
+      ?`${cur.name}／売上データ 〜${trendMD(addDaysISO(cur.peak_date,curSales.lastIdx-before))}まで（昨年：${prev.name}）`
+      :`${cur.name}／この期間の売上データはまだありません（昨年：${prev.name}）`;
+    renderTrendControls();
+    renderTrend();
+  }catch(e){
+    if(seq!==trendSeq)return;
+    console.warn('推移の取得に失敗しました',e);
+    status.textContent='取得に失敗しました：'+(e.message||e);
+  }
+}
+
+// ---------- 描画 ----------
+function trendCumTo(vals,idx){
+  let s=0;
+  for(let i=0;i<=idx&&i<vals.length;i++)s+=vals[i];
+  return s;
+}
+function trendPlanSrc(st){
+  if(!trendKinds.plan||!trendPlanId)return null;
+  if(!st.planCache[trendPlanId]){
+    const scn=st.scns.find(s=>s.id===trendPlanId);
+    if(!scn)return null;
+    st.planCache[trendPlanId]=trendAggPlan(scn,st.cur,st.before,st.after);
+  }
+  return st.planCache[trendPlanId];
+}
+
+function renderTrend(){
+  const st=trendState;
+  if(!st)return;
+  renderTrendHeadlineAndTable(st);
+  renderTrendChart(st);
+}
+
+function renderTrendHeadlineAndTable(st){
+  const {curSales,prevSales,before,after}=st;
+  const N=before+after+1;
+  const ents=trendEntities();
+  const hl=document.getElementById('trend-headline');
+  const body=document.getElementById('trend-body');
+  const head=document.getElementById('trend-head');
+  body.textContent='';head.textContent='';
+  const nowIdx=curSales.lastIdx;
+  const cmpIdx=nowIdx==null?null:Math.min(nowIdx,N-1);
+  const madeSrc=trendKinds.made?st.made:null;
+  const planSrc=trendPlanSrc(st);
+  const vals=(src,e)=>trendVals(src,e.prods,e.cos,N);
+  hl.textContent='';
+  const tot=ents[0];
+  if(nowIdx==null){
+    hl.textContent='この物日の売上データはまだありません（昨年の推移を表示しています）';
+  }else{
+    const now=trendCumTo(vals(curSales,tot),nowIdx);
+    const ly=trendCumTo(vals(prevSales,tot),cmpIdx);
+    hl.appendChild(document.createTextNode('ここまで '));
+    const big=document.createElement('span');big.className='big';big.textContent=trendFmt(now)+'束';
+    hl.appendChild(big);
+    hl.appendChild(document.createTextNode(' 売った！'));
+    const sub=document.createElement('span');sub.className='sub';
+    if(ly>0){
+      const pct=Math.round((now/ly-1)*100);
+      sub.textContent=`昨年の同じ時点は ${trendFmt(ly)}束（${pct>=0?'+':''}${pct}%）`;
+    }else sub.textContent='昨年の同じ時点のデータはありません';
+    hl.appendChild(sub);
+  }
+  // 表：現在の軸の全行（合計＋各商品／各会社）。重ねている種類の列を追加
+  const cols=['商品','今年の販売（ここまで）','昨年（同じ時点）','差','昨年（期間の最後まで）'];
+  if(trendAxis==='company')cols[0]='会社';
+  if(madeSrc)cols.push('作成実績（ここまで）');
+  if(planSrc)cols.push('予定（同じ時点）','予定（期間全体）');
+  const htr=document.createElement('tr');
+  cols.forEach(c=>{const th=document.createElement('th');th.textContent=c;htr.appendChild(th);});
+  head.appendChild(htr);
+  const cell=(tr,t,cls)=>{const td=document.createElement('td');td.textContent=t;if(cls)td.className=cls;tr.appendChild(td);};
+  ents.forEach(e=>{
+    const tr=document.createElement('tr');
+    if(e.id==='total')tr.style.fontWeight='700';
+    cell(tr,e.id==='total'?'合計':(trendAxis==='product'?'仏束花 ':'')+e.label);
+    const noPrev=e.noPrev===true;
+    const nowV=nowIdx==null?null:trendCumTo(vals(curSales,e),nowIdx);
+    const lyV=(cmpIdx==null||noPrev)?null:trendCumTo(vals(prevSales,e),cmpIdx);
+    cell(tr,nowV==null?'—':trendFmt(nowV));
+    cell(tr,lyV==null?'—':trendFmt(lyV));
+    if(nowV==null||lyV==null)cell(tr,'—');
+    else{const dd=nowV-lyV;cell(tr,(dd>0?'+':'')+trendFmt(dd),dd>0?'pos':dd<0?'neg':'');}
+    cell(tr,noPrev?'—':trendFmt(trendCumTo(vals(prevSales,e),N-1)));
+    if(madeSrc){
+      const mi=madeSrc.lastIdx;
+      cell(tr,mi==null?'—':trendFmt(trendCumTo(vals(madeSrc,e),mi)));
+    }
+    if(planSrc){
+      const pv=vals(planSrc,e);
+      cell(tr,cmpIdx==null?'—':trendFmt(trendCumTo(pv,cmpIdx)));
+      cell(tr,trendFmt(trendCumTo(pv,N-1)));
+    }
+    body.appendChild(tr);
+  });
+}
+
+// Chart.js プラグイン：ピーク／今日の縦線＋ラベル、今年の販売線の端の直接ラベル（線が4本以下のとき）
+const trendGuidePlugin={
+  id:'trendGuides',
+  afterDatasetsDraw(chart){
+    const g=chart.$trend;
+    if(!g)return;
+    const ctx=chart.ctx,a=chart.chartArea,xs=chart.scales.x;
+    ctx.save();
+    ctx.font='700 12px "Hiragino Sans","Noto Sans JP",sans-serif';ctx.textBaseline='middle';
+    const pill=(text,cx,cy,border)=>{
+      const w=ctx.measureText(text).width+14,h=20;
+      const x=Math.min(Math.max(cx-w/2,a.left),a.right-w);
+      ctx.fillStyle='rgba(255,255,255,0.94)';ctx.strokeStyle=border;ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.roundRect(x,cy-h/2,w,h,10);ctx.fill();ctx.stroke();
+      ctx.fillStyle='#202124';ctx.textAlign='center';ctx.fillText(text,x+w/2,cy);
+    };
+    const vline=(off,color,dash)=>{
+      const px=xs.getPixelForValue(off);
+      ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.setLineDash(dash);
+      ctx.beginPath();ctx.moveTo(px,a.top);ctx.lineTo(px,a.bottom);ctx.stroke();
+      ctx.setLineDash([]);
+      return px;
+    };
+    const inRange=off=>off>=xs.min&&off<=xs.max;
+    const peakX=vline(0,TREND_PEAK_COLOR,[5,4]);
+    if(g.todayOff!=null&&inRange(g.todayOff)){
+      const tx=vline(g.todayOff,'#202124',[]);
+      if(g.todayOff===0)pill('📍ピーク／今日',peakX,a.top+14,TREND_PEAK_COLOR);
+      else{
+        pill('📍ピーク',peakX,a.top+14,TREND_PEAK_COLOR);
+        pill('今日',tx,a.top+38,'#202124');
+      }
+    }else pill('📍ピーク',peakX,a.top+14,TREND_PEAK_COLOR);
+    // 線端ラベル（アクア/黄/マゼンタは背景とのコントラストが低いので、色に頼らず名前を出す）
+    if(g.endLabels){
+      const items=[];
+      chart.data.datasets.forEach((ds,i)=>{
+        if(ds.role!=='now')return;
+        const meta=chart.getDatasetMeta(i);
+        for(let k=ds.data.length-1;k>=0;k--){
+          if(ds.data[k].y!=null){
+            const p=meta.data[k];
+            items.push({y:p.y,x:p.x,text:ds.shortLabel+' '+trendFmt(ds.data[k].y)});
+            break;
+          }
+        }
+      });
+      items.sort((p,q)=>p.y-q.y);
+      for(let i=1;i<items.length;i++)if(items[i].y-items[i-1].y<15)items[i].y=items[i-1].y+15; // 重なり回避
+      ctx.textAlign='left';ctx.lineJoin='round';
+      items.forEach(it=>{
+        ctx.strokeStyle='#fff';ctx.lineWidth=4;ctx.strokeText(it.text,it.x+12,it.y);
+        ctx.fillStyle='#202124';ctx.fillText(it.text,it.x+12,it.y);
+      });
+    }
+    ctx.restore();
+  }
+};
+
+function renderTrendChart(st){
+  const {cur,prev,before,after,curSales,prevSales,made,today}=st;
+  const N=before+after+1;
+  const canvas=document.getElementById('trend-canvas');
+  if(trendChart){trendChart.destroy();trendChart=null;}
+  const ents=trendEntities().filter(e=>trendLines[trendAxis].has(e.id));
+  const planSrc=trendPlanSrc(st);
+  const datasets=[];
+  let maxV=0;
+  const build=(e,kind,src,cutIdx,skipEmpty)=>{
+    const K=TREND_KINDS[kind];
+    const vals=trendVals(src,e.prods,e.cos,N);
+    let c=0;
+    const data=vals.map((v,i)=>{
+      if(cutIdx==null||i>cutIdx)return {x:i-before,y:null};
+      c+=v;if(c>maxV)maxV=c;return {x:i-before,y:c};
+    });
+    datasets.push({label:`${e.label} ${K.label}`,shortLabel:e.label,role:kind,data,
+      borderColor:e.color,backgroundColor:e.color,borderWidth:K.width,borderDash:K.dash,borderCapStyle:K.cap||'butt',
+      pointRadius:data.map((d,i)=>(kind==='now'||kind==='made')&&i===cutIdx?5:0),pointHoverRadius:5,
+      pointBorderColor:'#fff',pointBorderWidth:2,tension:0,spanGaps:false});
+  };
+  // 描画順：昨年 → 予定 → 作成実績 → 今年の販売（最前面）
+  if(trendKinds.prev)ents.filter(e=>!e.noPrev).forEach(e=>build(e,'prev',prevSales,N-1));
+  if(planSrc)ents.forEach(e=>build(e,'plan',planSrc,N-1));
+  if(trendKinds.made)ents.forEach(e=>build(e,'made',made,made.lastIdx));
+  ents.forEach(e=>build(e,'now',curSales,curSales.lastIdx));
+  const empty=document.getElementById('trend-empty');
+  empty.style.display=maxV>0?'none':'block';
+  empty.textContent=maxV>0?'':'この期間の売上データがありません';
+  // 縦軸の上限は規模に応じてざっくり丸める（小さい規模は10束単位、大きいと半端な数字にならないよう100〜1,000束単位）
+  const yStep=maxV>4000?1000:maxV>1000?500:maxV>200?100:10;
+  const yMax=Math.max(10,Math.ceil(maxV*1.04/yStep)*yStep);
+  const todayOff=daysBetweenISO(cur.peak_date,today);
+  Chart.defaults.font.family='"Hiragino Sans","Noto Sans JP",sans-serif';
+  trendChart=new Chart(canvas,{
+    type:'line',
+    data:{datasets},
+    plugins:[trendGuidePlugin],
+    options:{
+      responsive:true,maintainAspectRatio:false,animation:false,
+      interaction:{mode:'index',intersect:false},
+      layout:{padding:{right:110,top:6}},
+      plugins:{
+        legend:{display:false}, // 凡例は上のチップ（色＝商品/会社、線見本＝種類）
+        tooltip:{
+          filter:item=>item.raw&&item.raw.y!=null,
+          callbacks:{
+            title:items=>{
+              const off=items[0].raw.x;
+              const rel=off===0?'ピーク':`ピーク${trendSigned(off)}日`;
+              return `${rel}（今年 ${trendMD(addDaysISO(cur.peak_date,off))}／昨年 ${trendMD(addDaysISO(prev.peak_date,off))}）`;
+            },
+            label:item=>`${item.dataset.label}：${trendFmt(item.raw.y)}束`,
+          },
+        },
+      },
+      scales:{
+        x:{type:'linear',min:-before,max:after,
+          ticks:{stepSize:1,precision:0,callback:v=>v===0?'0':trendSigned(v),color:'#5f6368'},
+          grid:{color:'#f1f3f4'},
+          title:{display:true,text:'中日前日（ピーク）を0とした日数',color:'#5f6368'}},
+        y:{beginAtZero:true,max:yMax,
+          ticks:{precision:0,color:'#5f6368',callback:v=>trendFmt(v)},
+          grid:{color:'#e8eaed'},
+          title:{display:true,text:'累積販売数（束）',color:'#5f6368'}},
+      },
+    },
+  });
+  trendChart.$trend={todayOff,endLabels:ents.length<=4};
+  trendChart.update('none');
+}
+
 function initTabs(){
   const btns=[...document.querySelectorAll('.tab-btn')];
-  const panes={analysis:document.getElementById('tab-analysis'),plan:document.getElementById('tab-plan'),balance:document.getElementById('tab-balance')};
+  const panes={analysis:document.getElementById('tab-analysis'),plan:document.getElementById('tab-plan'),balance:document.getElementById('tab-balance'),trend:document.getElementById('tab-trend')};
   btns.forEach(btn=>{
     btn.addEventListener('click',()=>{
       const t=btn.dataset.tab;
@@ -2612,6 +3150,7 @@ function initTabs(){
       Object.keys(panes).forEach(k=>panes[k]&&panes[k].classList.toggle('active',k===t));
       if(t==='plan')initPlanTab();
       if(t==='balance')initBalanceTab();
+      if(t==='trend')initTrendTab();
     });
   });
 }
